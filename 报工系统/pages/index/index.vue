@@ -6,10 +6,12 @@
 			style="background-image: url(../../static/image/index-border.png);">
 			<view class="index-info flex align-center justify-center">
 				<view class="form flex align-center" v-for="(item,index) in formList" :key="index">
-					<span class="title">{{item.label}}：</span>
-					<input disabled :type="item.label=='SOP密码' ? 'password':'text'" v-model="item.value"
-						:class="currentIndex == index ?'input-selected':''" :focus="item.focus"
-						@focus="currentIndex = index" />
+					<view class="title">{{item.label}}：</view>
+					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
+						@tap="currentIndex = index">{{item.value}}</view>
+					<!-- <input v-model="item.value"
+						 :focus="item.focus"
+						@focus="currentIndex = index" />-->
 				</view>
 				<view class="btn" @click="handleLogin">开始使用</view>
 			</view>
@@ -42,6 +44,9 @@
 </template>
 
 <script>
+	import {
+		login
+	} from '../../network/login.js';
 	export default {
 		data() {
 			return {
@@ -53,7 +58,7 @@
 				formList: [{
 						label: '系统编号',
 						value: '',
-						focus: true,
+						focus: false,
 					},
 					{
 						label: 'API 地址',
@@ -83,10 +88,48 @@
 
 		},
 		methods: {
-			onClickDH() {
-
+			onClickDH(num) {
+				if (num == 'del') {
+					let nowValue = this.formList[this.currentIndex].value.substring(0, this.formList[this.currentIndex]
+						.value.length - 1)
+					this.$set(this.formList[this.currentIndex], 'value', nowValue)
+					this.currentValue = nowValue.split(',')
+				} else if (num == 'clear') {
+					this.$set(this.formList[this.currentIndex], 'value', '')
+				} else {
+					if (this.formList[this.currentIndex].value.length <= 15) {
+						this.currentValue = [this.formList[this.currentIndex].value]
+						this.currentValue.push(num)
+						this.$set(this.formList[this.currentIndex], 'value', this.currentValue.join(''))
+					} else {
+						uni.showToast({
+							icon: 'error',
+							title: '超出可输入长度',
+							duration: 2000
+						})
+					}
+				}
 			},
-			handleLogin() {}
+			handleLogin() {
+				login(config).then(res => {
+					const code = res.data.code;
+					if (code === 100) {
+						uni.showToast({
+							title: '登录成功'
+						})
+						window.localStorage.setItem("token", res.data.data.token);
+						uni.switchTab({
+							url: "../home/home"
+						})
+					} else {
+						uni.showToast({
+							title: res.data.msg
+						})
+					}
+				}).catch(err => {
+					console.log(err)
+				})
+			},
 		}
 	}
 </script>
@@ -120,7 +163,7 @@
 				.form {
 					margin: 2vh 0;
 
-					input {
+					.editMode {
 						width: 22vw;
 						height: 5vh;
 						background: #0A223B;
@@ -128,10 +171,7 @@
 						padding: 8rpx 23rpx;
 						outline: 0;
 						border: 1px solid #0A223B;
-
-						&:focus {
-							border: 1rpx solid #00FFFF;
-						}
+						overflow: hidden;
 					}
 
 					.input-selected {
