@@ -8,12 +8,9 @@
 				<view class="form flex align-center" v-for="(item,index) in formList" :key="index">
 					<view class="title">{{item.label}}：</view>
 					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
-						@tap="currentIndex = index">{{item.value}}</view>
-					<!-- <input v-model="item.value"
-						 :focus="item.focus"
-						@focus="currentIndex = index" />-->
+						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
 				</view>
-				<view class="btn" @click="handleLogin">开始使用</view>
+				<button class="btn" :loading="loading" @click="handleLogin">开始使用</button>
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
@@ -44,9 +41,7 @@
 </template>
 
 <script>
-	import {
-		login
-	} from '../../network/login.js';
+	
 	export default {
 		data() {
 			return {
@@ -60,11 +55,11 @@
 						value: '',
 						focus: false,
 					},
-					{
-						label: 'API 地址',
-						value: 'https://my.easy-deer.com/Api2/data.php',
-						focus: false,
-					},
+					// {
+					// 	label: 'API 地址',
+					// 	value: 'https://my.easy-deer.com/Api2/data.php',
+					// 	focus: false,
+					// },
 					{
 						label: 'SOP账户',
 						value: '',
@@ -74,12 +69,13 @@
 						value: '',
 						focus: false,
 					},
-					{
-						label: '设备编号',
-						value: '',
-						focus: false,
-					}
+					// {
+					// 	label: '设备编号',
+					// 	value: '',
+					// 	focus: false,
+					// }
 				],
+				loading:false,
 				equipmentInfo: {},
 				currentValue: []
 			}
@@ -111,22 +107,54 @@
 				}
 			},
 			handleLogin() {
-				login(config).then(res => {
-					const code = res.data.code;
-					if (code === 100) {
-						uni.showToast({
-							title: '登录成功'
-						})
-						window.localStorage.setItem("token", res.data.data.token);
-						uni.switchTab({
-							url: "../home/home"
-						})
-					} else {
-						uni.showToast({
-							title: res.data.msg
+				if(this.loading){
+					return
+				}
+				for (let i of this.formList) {
+					if (i.value == '') {
+						return uni.showToast({
+							icon: 'error',
+							title: '请输入信息',
+							duration: 2000
 						})
 					}
+				}
+				this.loading = true;
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'checkNetOnLineFun',
+						mySysId: this.formList[0].value,
+					}
+				}).then(res => {
+					return this.$api({
+						url: '/api/data.php',
+						method: 'post',
+						data: {
+							api_class: 'Open_sopEquipmentClass',
+							need_type: 'equipmentLogin',
+							mySysId: this.formList[0].value,
+							sop_equipment_account: this.formList[1].value,
+							sop_equipment_password: this.formList[2].value,
+						}
+					})
+				}).then((res) => {
+					this.loading = false;
+					uni.showToast({
+						icon: 'success',
+						title: '登陆成功',
+						duration: 2000
+					})
+					// uni.setStorageSync('tokenInfo', res.data.data.tokenInfo)
+					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
+					uni.setStorageSync('mySysId', this.formList[0].value)
+					uni.redirectTo({
+						url: '../orderlist/order'
+					})
 				}).catch(err => {
+					this.loading = false;
 					console.log(err)
 				})
 			},
@@ -161,7 +189,7 @@
 				padding-left: 2vh;
 
 				.form {
-					margin: 2vh 0;
+					margin: 5vh 0;
 
 					.editMode {
 						width: 22vw;
@@ -184,9 +212,10 @@
 					border-radius: 5rpx;
 					font-size: 2vw;
 					color: #FFFFFF;
-					padding: 2vh 5vw;
 					margin-top: 2vh;
-					width: 70%;
+					width: 80%;
+					height: 150rpx;
+					line-height: 150rpx;
 					text-align: center;
 				}
 			}

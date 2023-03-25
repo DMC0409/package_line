@@ -3,6 +3,10 @@
 		{
 			"path": "pages/index/index",
 			"name": "index"
+		},
+		{
+			"path": "pages/orderlist/order",
+			"name": "order"
 		}
 	],
 	"globalStyle": {
