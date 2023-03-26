@@ -2,11 +2,11 @@ import App from './App'
 
 // #ifndef VUE3
 import Vue from 'vue'
-import Vuex from 'vuex'
 Vue.config.productionTip = false
 App.mpType = 'app'
 
-Vue.use(Vuex)
+// 引入vueX
+import store from 'store/index.js'
 // 引入接口文件
 import {
 	myRequest,
@@ -46,7 +46,8 @@ try {
 } catch (error) {}
 
 const app = new Vue({
-	...App
+	...App,
+	store
 })
 app.$mount()
 // #endif

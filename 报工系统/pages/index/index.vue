@@ -41,7 +41,9 @@
 </template>
 
 <script>
-	
+	import {
+		mapMutations
+	} from 'vuex'
 	export default {
 		data() {
 			return {
@@ -75,15 +77,18 @@
 					// 	focus: false,
 					// }
 				],
-				loading:false,
+				loading: false,
 				equipmentInfo: {},
 				currentValue: []
 			}
 		},
 		onLoad() {
-
+			if (uni.getStorageSync('mySysId')) {
+				this.formList[0].value = uni.getStorageSync('mySysId')
+			}
 		},
 		methods: {
+			...mapMutations(['UPDATE_WIFI']),
 			onClickDH(num) {
 				if (num == 'del') {
 					let nowValue = this.formList[this.currentIndex].value.substring(0, this.formList[this.currentIndex]
@@ -107,7 +112,7 @@
 				}
 			},
 			handleLogin() {
-				if(this.loading){
+				if (this.loading) {
 					return
 				}
 				for (let i of this.formList) {
@@ -129,6 +134,11 @@
 						mySysId: this.formList[0].value,
 					}
 				}).then(res => {
+					if (res.data.sign == 1) {
+						this.UPDATE_WIFI(true)
+					} else {
+						this.UPDATE_WIFI(false)
+					}
 					return this.$api({
 						url: '/api/data.php',
 						method: 'post',
@@ -150,7 +160,7 @@
 					// uni.setStorageSync('tokenInfo', res.data.data.tokenInfo)
 					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
 					uni.setStorageSync('mySysId', this.formList[0].value)
-					uni.redirectTo({
+					uni.reLaunch({
 						url: '../orderlist/order'
 					})
 				}).catch(err => {

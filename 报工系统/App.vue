@@ -1,4 +1,8 @@
 <script>
+	import {
+		mapState,
+		mapMutations
+	} from 'vuex'
 	export default {
 		data() {
 			return {
@@ -20,6 +24,7 @@
 			clearInterval(this.timer)
 		},
 		methods: {
+			...mapMutations(['UPDATE_WIFI']),
 			async onCheckNet() {
 				if (uni.getStorageSync('mySysId')) {
 					this.$api({
@@ -30,7 +35,13 @@
 								need_type: 'checkNetOnLineFun',
 								mySysId: uni.getStorageSync('mySysId'),
 							}
-						}).then(res => {})
+						}).then(res => {
+							if (res.data.sign == 1) {
+								this.UPDATE_WIFI(true)
+							}else{
+								this.UPDATE_WIFI(false)
+							}
+						})
 						.catch(err => {
 							console.log(err)
 						})

@@ -11,15 +11,14 @@ export const myRequest = (options) => {
 			},
 			success: (res) => {
 				//返回的数据（不固定，看后端接口，这里是做了一个判断，如果不为true，用uni.showToast方法提示获取数据失败)
-				if (res.data.sign == 1) {
-					resolve(res)
-				}else{
-					return uni.showToast({
+				if (res.data.sign != 1) {
+					uni.showToast({
 						title: res.data.info,
 						icon: 'error',
 						duration: 2000
 					})
 				}
+				resolve(res)
 			},
 			// 这里的接口请求，如果出现问题就输出接口请求失败
 			fail: (err) => {
