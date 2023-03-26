@@ -14,8 +14,9 @@
 		<!-- 刷卡框 -->
 		<view class="dialog-slot-card flex align-center justify-center" v-if="showShiGongDH">
 			<view class="card-div">
-				<view class="card-num">
-					{{shigongDH2==''?'施工单号':shigongDH2}}
+				<view class="card-num flex align-center justify-between">
+					<text>{{shigongDH2==''?'施工单号':shigongDH2}}</text>
+					<image @click="toScan" src="../../static/image/scan.png" alt=""></image>
 				</view>
 				<view class="detail">
 					<view class="jsq flex justify-end">
@@ -58,6 +59,50 @@
 				<view class="time flex">
 					<text class="time-moment">{{time}}</text>
 					<text class="time-date">{{date}} {{week}}</text>
+				</view>
+			</view>
+		</view>
+		<!-- 弹窗 -->
+		<view class="dialog-order" v-if="showOrderList" ref="msk" @click="showOrderList = false">
+			<!-- 订单 -->
+			<view class="order-info">
+				<view class="order-header flex align-center justify-between">
+					<view class="header-tex">共计：{{totalRow}}条</view>
+					<image @click="showOrderList = false" class="img-close"
+						src="../../static/image/right-back-close.png">
+					</image>
+				</view>
+				<view class="order-list">
+					<block v-for="(item,index) in dataList" :key="index">
+						<view class="order-list-item flex align-center" :class="orderIndex == index?' item-selected':''"
+							@click.stop="onEditOrder(item,index)">
+							<view class="order-tags" v-if="item.bgTitle" :style="'background-color:'+item.bgColor+';'">
+								{{item.bgTitle}}
+							</view>
+							<view :style="item.bgTitle?'':'margin-left:1vw;'">
+								<view :class="orderIndex == index?'item-binahao':''">
+									{{item.order_index ? 'No.'+item.order_index:''}}
+								</view>
+								<view :class="orderIndex == index?'item-title':''">{{item.title}}</view>
+								<view>{{item.descA}}</view>
+								<view>{{item.descB}}</view>
+								<view>{{item.descC}}</view>
+								<view>{{item.descD}}</view>
+							</view>
+						</view>
+					</block>
+				</view>
+
+				<view class="list-footer flex align-center justify-between">
+					<view class="list-btn" @click="onSureLink" style="background-color:green;">
+						确认环节
+					</view>
+					<view class="footer-right-btn"
+						style=" display: flex;align-items:center;width:65%;justify-content: flex-end;">
+						<view class="list-btn" @click="onPageListCit('pre')">上一页</view>
+						<view>{{orderPageIndex}}/{{orderTotalPage}}</view>
+						<view class="list-btn" @click="onPageListCit('next')">下一页</view>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -134,7 +179,7 @@
 				<view class="data-none none-img" v-if="(showSGD&&!shiGongDImg)||(!showSGD&&tuGaoImgList.length<=0) ">
 					暂无图片
 				</view>
-				<view class="right-head flex align-center justify-around" v-if="showList">
+				<!-- <view class="right-head flex align-center justify-around" v-if="showList">
 					<view class="add-btn flex align-center justify-center"
 						@click="onGetRowDetail(tableRowData,currentIndex,0)">
 						立即报工
@@ -143,7 +188,7 @@
 						style="background-color:green;">
 						确认环节
 					</view>
-				</view>
+				</view> -->
 			</view>
 		</view>
 	</view>
@@ -160,9 +205,11 @@
 				time: '',
 				date: '',
 				week: '',
+
 				showSetting: false,
 				showShiGongDH: false,
 				shigongDH2: '',
+
 				orderDetail: {
 					orderTitle: '',
 					orderNum: '',
@@ -171,10 +218,21 @@
 					orderRang: [],
 					order_id: '',
 				},
+
+				stepsIndex: -1,
 				stepsList: [],
+				config_table_id: -1,
 				tuGaoImgList: [],
 				showList: true,
 				showSGD: false,
+
+				showOrderList: false,
+				totalRow: 0,
+				dataList: [],
+				orderIndex: -1,
+				orderPageIndex: 1, //右侧弹框分页
+				orderTotalPage: 1, //总页数
+
 				timer: null,
 				timer2: null,
 			}
@@ -190,7 +248,6 @@
 			})
 			// #endif
 			this.getPackTable()
-			this.getNeedReportData()
 		},
 		computed: {
 			...mapState(['vuex_Wifi'])
@@ -213,7 +270,7 @@
 				// #endif
 			},
 			// 获取报工表格
-			getPackTable(){
+			getPackTable() {
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -221,40 +278,186 @@
 						api_class: 'Open_sopEquipmentClass',
 						need_type: 'getAboutJobTable',
 						mySysId: uni.getStorageSync('mySysId'),
-						loginsession_sop:uni.getStorageSync('loginsession'),
-						table_about_job:'report'
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						table_about_job: 'report'
 					}
 				}).then(res => {
-					console.log(res)
+					this.stepsList = res.data.data.tableList
 				}).catch(err => {
 					console.log(err)
 				})
 			},
-			// 获取需要报工的单据
-			getNeedReportData(){
-				this.$api({
-					url: '/api/data.php',
-					method: 'post',
-					data: {
-						api_class: 'Open_sopEquipmentClass',
-						need_type: 'getMobTableList',
-						mySysId: uni.getStorageSync('mySysId'),
-						loginsession_sop:uni.getStorageSync('loginsession'),
-						config_table_id:"594481219512010038",
-						order_id:'230202002',
-						isSopRequest:'1'
-					}
-				}).then(res => {
-					console.log(res)
-				}).catch(err => {
-					console.log(err)
-				})
+			// 选择报工步骤
+			onShowDetail(item, index) {
+				this.stepsDetail = item
+				this.stepsIndex = index
+				this.config_table_id = item.config_table_id
+				this.onSetReCode()
+				// this.showOrderList = true
 			},
+			// 打开施工单号输入框
 			onSetReCode() {
 				this.showShiGongDH = true
 			},
+			// 确认/取消施工单号输入框
 			onInputSure() {
-				this.showShiGongDH = false
+				if (this.shigongDH2 != '') {
+					this.$api({
+						url: '/api/data.php',
+						method: 'post',
+						data: {
+							api_class: 'Open_sopEquipmentClass',
+							need_type: 'checkScanCodeFun',
+							mySysId: uni.getStorageSync('mySysId'),
+							loginsession_sop: uni.getStorageSync('loginsession'),
+							code: this.shigongDH2,
+							isSopRequest: '1'
+						}
+					}).then(res => {
+						// 获取需要报工的单据
+						return this.$api({
+							url: '/api/data.php',
+							method: 'post',
+							data: {
+								api_class: 'Open_sopEquipmentClass',
+								need_type: 'getMobTableList',
+								mySysId: uni.getStorageSync('mySysId'),
+								loginsession_sop: uni.getStorageSync('loginsession'),
+								config_table_id: this.config_table_id,
+								order_id: res.data.data.order_id,
+								isSopRequest: '1'
+							}
+						})
+					}).then(res => {
+						console.log(res)
+						const {
+							tableHeadList,
+							tableInfo
+						} = res.data.data
+						const list = res.data.data.dataInfo.list
+						this.totalRow = list.row
+						this.showShiGongDH = false
+						this.showOrderList = true
+						let getHtmlList = []
+						for (let index in list.dataList) {
+							var dataInfo = list.dataList[index];
+							var tempInfo = {
+								'th_com_name': list.dataList[index]['th_com_name'],
+								'order_index': list.dataList[index]['order_index'],
+								'tb_auto_id': list.dataList[index]['tb_auto_id'],
+								'config_table_id': list.dataList[index]['config_table_id'],
+								'order_id': list.dataList[index]['order_id'],
+								'bgColor': list.dataList[index]['mobsop_line_data_bgcolor'],
+								'bgTitle': list.dataList[index]['mobsop_line_data_title'],
+								'title': "",
+								'descA': "",
+								'descB': "",
+								'descC': "",
+								'descD': ""
+							}
+							for (let key in tableHeadList) {
+								var headInfo = tableHeadList[key];
+								if (typeof(headInfo['comm_set_json']) == 'string') {
+									headInfo['comm_set_json'] = JSON.parse(headInfo['comm_set_json']);
+								}
+
+								//标题
+								if (typeof(headInfo['comm_set_json']['user_head_show_title_mob']) != "undefined") {
+									if (tempInfo['title'] != '') {
+										tempInfo['title'] += " | ";
+									}
+									tempInfo['title'] += dataInfo['th_' + headInfo['config_table_head_id']] ?
+										dataInfo[
+											'th_' + headInfo['config_table_head_id']] : '';
+								}
+
+								//第一级
+								if (typeof(headInfo['comm_set_json']['user_head_show_desc_a_mob']) !=
+									"undefined") {
+									if (tempInfo['descA'] != '') {
+										tempInfo['descA'] += " | ";
+									}
+									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+									}
+									tempInfo['descA'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+										headInfo[
+											'config_table_head_id']] || '-');
+								}
+
+								if (typeof(headInfo['comm_set_json']['user_head_show_desc_b_mob']) !=
+									"undefined") {
+									if (tempInfo['descB'] != '') {
+										tempInfo['descB'] += " | ";
+									}
+									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+									}
+									tempInfo['descB'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+										headInfo[
+											'config_table_head_id']] || '-');
+								}
+
+								if (typeof(headInfo['comm_set_json']['user_head_show_desc_c_mob']) !=
+									"undefined") {
+									if (tempInfo['descC'] != '') {
+										tempInfo['descC'] += " | ";
+									}
+									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+									}
+									tempInfo['descC'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+										headInfo[
+											'config_table_head_id']] || '-');
+								}
+
+								if (typeof(headInfo['comm_set_json']['user_head_show_desc_d_mob']) !=
+									"undefined") {
+									if (tempInfo['descD'] != '') {
+										tempInfo['descD'] += " | ";
+									}
+									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+									}
+									tempInfo['descD'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+										headInfo[
+											'config_table_head_id']] || '-');
+								}
+							}
+							getHtmlList[index] = tempInfo;
+						}
+						this.dataList = getHtmlList
+						//总共有多少页
+						let count = Number(res.data.data.dataInfo.list.row) / 10
+						if (count > parseInt(count)) {
+							this.totalPage = parseInt(count) + 1;
+						} else {
+							this.totalPage = parseInt(count);
+						}
+						console.log(this.dataList)
+					}, () => {
+						this.showShiGongDH = false
+					}).catch(err => {
+						console.log(err)
+					})
+				} else {
+					// 关闭施工单号输入框
+					this.showShiGongDH = false
+				}
+			},
+			// 选中右侧订单
+			onEditOrder(item, index) {
+				this.orderIndex = index
+			},
+			// 执行扫一扫获取单号
+			toScan() {
+				let _this = this
+				uni.scanCode({
+					onlyFromCamera: true,
+					success: function(res) {
+						_this.shigongDH2 = res.result
+					}
+				})
 			},
 			//刷卡施工单号
 			onClickDH(num) {
@@ -266,6 +469,7 @@
 					this.shigongDH2 += num
 				}
 			},
+			// 重新登录
 			onInitSet(type) {
 				if (type == 'init') {
 					uni.removeStorageSync('loginsession')
@@ -278,7 +482,8 @@
 						icon: 'none'
 					})
 				}
-			}
+			},
+			onSureLink() {}
 		},
 		onUnload() {
 			clearInterval(this.timer2)
@@ -289,8 +494,8 @@
 <style lang="scss">
 	.container {
 		width: 100%;
-		height: 95vh;
-		padding-top: 5vh;
+		height: 100vh;
+		// padding-top: 5vh;
 		flex-direction: column;
 
 		.dialog-slot-card {
@@ -319,6 +524,11 @@
 					font-weight: bold;
 					color: #9CC8ED;
 					font-size: 1.5vw;
+
+					image {
+						width: 2vw;
+						height: 2vw;
+					}
 				}
 
 				.detail {
@@ -386,7 +596,7 @@
 
 				.set-btn-div {
 					width: 100%;
-					font-size: 8rpx;
+					font-size: 12px;
 					color: #FFFFFF;
 
 					.set-btn {
@@ -400,7 +610,8 @@
 
 		.header {
 			width: 100%;
-			height: 8vh;
+			height: 11vh;
+			margin-top: 5vh;
 			color: #A6C4E6;
 
 			.reCheck {
@@ -413,8 +624,6 @@
 			.logo {
 				width: 10vw;
 				height: 5vh;
-				margin-top: 23rpx;
-				margin-bottom: 10rpx;
 			}
 
 			.setting {
@@ -447,9 +656,113 @@
 			}
 		}
 
+		.dialog-order {
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: rgba($color: #000000, $alpha: .7);
+			z-index: 100;
+
+			.order-info {
+				position: absolute;
+				right: 0;
+				z-index: 101;
+				width: 40%;
+				height: 100%;
+				background-color: #EFF4FF;
+				color: #222222;
+
+				.order-header {
+					padding: 8rpx 10rpx 8rpx 20rpx;
+					background-color: #96CDF7;
+					height: 6vh;
+
+					.header-tex {
+						font-size: 1vw;
+						color: #222222;
+					}
+
+					.img-close {
+						width: 1.5vw;
+						height: 1.5vw;
+					}
+				}
+
+				.order-list {
+					font-size: 2vh;
+					color: #080b15;
+					height: 84%;
+					overflow: auto;
+
+					.order-list-item {
+						padding: 8rpx 0 4rpx 0;
+						border-bottom: 1rpx solid #DCDFE7;
+
+						.order-tags {
+							width: 4vw;
+							min-width: 3.5vw;
+							padding: 6vh 0;
+							border-radius: 2vw 0 0 2vw;
+							-webkit-writing-mode: vertical-lr;
+							writing-mode: vertical-lr;
+							font-size: 2vw;
+							text-align: center;
+							font-weight: bold;
+							color: #FFFFFF;
+							margin-right: 1vw;
+							padding-left: 0.6vh;
+						}
+
+						view {
+							margin-bottom: 6rpx;
+							margin-right: 6rpx;
+							opacity: 0.5;
+						}
+
+						.item-binahao {
+							font-weight: bold;
+							color: #222222;
+							opacity: 1;
+						}
+
+						.item-title {
+							color: #222222;
+							opacity: 1;
+						}
+					}
+
+					.item-selected {
+						border: 2rpx solid #42B5F1;
+						background: linear-gradient(to right, #EFF4FF 64%, #C8E3FF);
+					}
+				}
+
+
+				.list-footer {
+					width: 100%;
+					height: 10%;
+					font-size: 1.5vw;
+					color: #222222;
+					box-shadow: 0 -2rpx 8rpx -1rpx #333F5A;
+
+					.list-btn {
+						margin: 0 10rpx;
+						background: #007aff;
+						border-radius: 0.8vw;
+						font-size: 1vw;
+						padding: 1.5vh 2.5vw;
+						color: #FFFFFF;
+						text-align: center;
+					}
+				}
+			}
+		}
+
 		.content {
 			width: 100%;
-			height: 92vh;
+			height: 89vh;
 			padding: 9rpx 1rpx;
 
 			.info-detail {
@@ -526,6 +839,7 @@
 						flex-wrap: wrap;
 
 						.btm-steps {
+							width: 50%;
 
 							.steps-item {
 								width: 2vw;
@@ -553,13 +867,14 @@
 							}
 
 							.steps-btn {
-								font-size: 1vw;
-								width: 16vw;
+								font-size: 1.3vw;
+								width: 14vw;
 								padding: 1.3vh 1.5vw;
 								text-align: center;
 								background: rgba($color: #9FC4E1, $alpha: .4);
 								border-radius: 5rpx;
 								margin: 0;
+								color: #fff;
 							}
 
 							.steps-btn-selected {

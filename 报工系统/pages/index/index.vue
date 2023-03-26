@@ -54,7 +54,7 @@
 				currentIndex: 0,
 				formList: [{
 						label: '系统编号',
-						value: '',
+						value: '947535',
 						focus: false,
 					},
 					// {
@@ -64,11 +64,11 @@
 					// },
 					{
 						label: 'SOP账户',
-						value: '',
+						value: '123456',
 						focus: false,
 					}, {
 						label: 'SOP密码',
-						value: '',
+						value: '654321',
 						focus: false,
 					},
 					// {
@@ -134,11 +134,7 @@
 						mySysId: this.formList[0].value,
 					}
 				}).then(res => {
-					if (res.data.sign == 1) {
-						this.UPDATE_WIFI(true)
-					} else {
-						this.UPDATE_WIFI(false)
-					}
+					this.UPDATE_WIFI(true)
 					return this.$api({
 						url: '/api/data.php',
 						method: 'post',
@@ -163,9 +159,11 @@
 					uni.reLaunch({
 						url: '../orderlist/order'
 					})
-				}).catch(err => {
+				}, () => {
 					this.loading = false;
-					console.log(err)
+					this.UPDATE_WIFI(false)
+				}).catch(() => {
+					this.loading = false;
 				})
 			},
 		}
