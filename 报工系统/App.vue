@@ -34,6 +34,7 @@
 								api_class: 'Open_sopEquipmentClass',
 								need_type: 'checkNetOnLineFun',
 								mySysId: uni.getStorageSync('mySysId'),
+								isSopRequest: "1"
 							}
 						}).then(res => {
 							if (res.data.sign == 1) {

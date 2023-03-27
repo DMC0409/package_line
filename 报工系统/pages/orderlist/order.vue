@@ -1,9 +1,13 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
+		<!-- 放大查看图片 -->
+		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
+		<!-- 确认结束环节弹窗 -->
+		<info-sure-modal :showLink.sync="showLink" :rowData="rowData" :title="linkTitle" />
 		<!-- 设置框 -->
 		<view class="dialog-slot-card flex align-center justify-center" v-if="showSetting" @click="showSetting=false">
-			<view class="setting-div flex align-center justify-center">
+			<view class="setting-div flex align-center justify-center" @click.stop="onEgg">
 				<view class="set-title">设置</view>
 				<view class="set-btn-div flex justify-around">
 					<view class="set-btn" @click.stop="onInitSet('init')">初始化设定</view>
@@ -45,6 +49,85 @@
 				</view>
 			</view>
 		</view>
+		<!-- 订单详情编辑 -->
+		<view class="dialog-order-detail" v-if="showOrderDetail" @click="showOrderDetail = false">
+			<view class="detail-info" @click.stop="onEgg">
+				<view class="detail-header flex align-center justify-between">
+					<view class="header-tex">{{dataDetailAllList.formTitle}}</view>
+					<image @click="onCloseDataDetail" class="img-close" src="../../static/image/icon-close.png">
+					</image>
+				</view>
+				<viwe class="detail-content flex">
+					<view class="detail-con-left flex">
+						<view style="height:80%;overflow: auto;">
+							<view>
+								订单需要：
+								<!-- {{dataDetailAllList.yieldInfo.all ||0}}， -->
+								已经报工：
+								<!-- {{dataDetailAllList.yieldInfo.curr||0}} -->
+							</view>
+							<!-- <block v-for="(item,index) in dataDetailList" :key="index">
+								<view class="left-item flex align-center" v-if="item.head_input_set == 20 || item.head_input_set ==21">
+									{{item.head_name ||''}}：
+									<view class="type-btn flex align-center justify-around">
+										<view v-for="(val,ind) in JSON.parse(item.head_input_setjson)" :key="ind"
+											:class="item.head_input_value === ind?'type-item type-item-selected':'type-item'"
+											@click="onClickOrderIndex(index,ind)">{{val.name}}</view>
+									</view>
+								</view>
+								<view class="left-item flex align-center"
+									v-else-if="item.head_input_save ==1 || item.head_input_save ==2">
+									{{item.head_name||''}}：<input type="text" :value="item.head_input_value"
+										:class="inputIndex==index ?'input-selected':''" @click="onFocusValue(index)"
+										disabled />
+								</view>
+							</block> -->
+						</view>
+						<view class="left-switch flex align-center justify-between">
+							<view class="switch-title">
+								<!-- {{dataDetailAllList.list_Info.list_name}}- -->
+								<!-- <span v-if="dataDetailAllList.list_log_Info.list_status === '100'"> 是否驳回?</span> -->
+								是否驳回?
+								<!-- <span v-else> 是否完成?</span> -->
+								<span>是否完成?</span>
+							</view>
+							<switch color="#007AFF" @change="onChangeChecked" />
+						</view>
+					</view>
+					<view class="detail-con-right">
+						<view class="jsq flex">
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('1')">1</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('2')">2</view>
+							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('3')">3</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('4')">4</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('5')">5</view>
+							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('6')">6</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('7')">7</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('8')">8</view>
+							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('9')">9</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('*')">*</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('0')">0</view>
+							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('.')">.</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('-')">-</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('清除')">清除</view>
+							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('del')">
+								<image src="../../static/image/icon-jsq-close.png"></image>
+							</view>
+						</view>
+						<!-- <view class="edit-btn" @click="onSureEdit">{{!AddSuccess?'确认':'修改'}}</view> -->
+						<view class="edit-btn flex align-center justify-center">
+							<input type="text" :value="emploId" @input="onInputValue" @confirm="onSureEdit"
+								:focus="getFocus" @blur="getFocus1()" placeholder="员工卡号"
+								placeholder-class="place-class" />
+							<image class="input-close" @tap.stop="onDelInput" src="../../static/image/input-close.png">
+							</image>
+							<view class="submit-btn" @click="onSureEdit">提交</view>
+						</view>
+					</view>
+				</viwe>
+			</view>
+		</view>
+		<!-- 头部 -->
 		<view class="header flex image-back-norepeat align-center justify-between"
 			style="background-image: url(../../static/image/header-back.png);">
 			<view class="reCheck" @click="onSetReCode">
@@ -65,7 +148,7 @@
 		<!-- 弹窗 -->
 		<view class="dialog-order" v-if="showOrderList" ref="msk" @click="showOrderList = false">
 			<!-- 订单 -->
-			<view class="order-info">
+			<view class="order-info" @click.stop="onEgg">
 				<view class="order-header flex align-center justify-between">
 					<view class="header-tex">共计：{{totalRow}}条</view>
 					<image @click="showOrderList = false" class="img-close"
@@ -170,7 +253,8 @@
 							<swiper class="swiper" indicator-dots indicator-colo="#224B7A" interval="10000">
 								<swiper-item v-for="(item,index) in tuGaoImgList" :key="index">
 									<image @click="previewMoreImage(index)" class="swiper" mode="widthFix"
-										:src="item.url"></image>
+										:src="item.url">
+									</image>
 								</swiper-item>
 							</swiper>
 						</view>
@@ -195,10 +279,16 @@
 </template>
 
 <script>
+	import previewImage from '@/components/kxj-previewImage/kxj-previewImage.vue';
+	import infoSureModal from '../../components/info-sure-modal.vue'
 	import {
 		mapState
 	} from 'vuex'
 	export default {
+		components: {
+			previewImage,
+			infoSureModal
+		},
 		data() {
 			return {
 				appVersion: '',
@@ -207,7 +297,7 @@
 				week: '',
 
 				showSetting: false,
-				showShiGongDH: false,
+				showShiGongDH: true,
 				shigongDH2: '',
 
 				orderDetail: {
@@ -222,9 +312,12 @@
 				stepsIndex: -1,
 				stepsList: [],
 				config_table_id: -1,
-				tuGaoImgList: [],
+
 				showList: true,
 				showSGD: false,
+				shiGongDImg: '', //施工单图片
+				tuGaoImgList: [],
+				imgs: [], //预览图片
 
 				showOrderList: false,
 				totalRow: 0,
@@ -232,6 +325,13 @@
 				orderIndex: -1,
 				orderPageIndex: 1, //右侧弹框分页
 				orderTotalPage: 1, //总页数
+
+				showLink: false,
+				rowData: {},
+				linkTitle: '',
+				
+				dataDetailAllList: {}, //点击新增所有信息
+				showOrderDetail: false,
 
 				timer: null,
 				timer2: null,
@@ -279,7 +379,8 @@
 						need_type: 'getAboutJobTable',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						table_about_job: 'report'
+						table_about_job: 'report',
+						isSopRequest: '1'
 					}
 				}).then(res => {
 					this.stepsList = res.data.data.tableList
@@ -289,11 +390,139 @@
 			},
 			// 选择报工步骤
 			onShowDetail(item, index) {
+				if (this.orderDetail.order_id == '') {
+					return uni.showToast({
+						title: '请输入有效施工单号',
+						icon: 'error',
+						duration: 2000
+					})
+				}
 				this.stepsDetail = item
 				this.stepsIndex = index
 				this.config_table_id = item.config_table_id
-				this.onSetReCode()
-				// this.showOrderList = true
+				// 获取需要报工的单据
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'getMobTableList',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						config_table_id: this.config_table_id,
+						order_id: this.orderDetail.order_id,
+						isSopRequest: '1'
+					}
+				}).then(res => {
+					console.log(res)
+					const {
+						tableHeadList,
+						tableInfo
+					} = res.data.data
+					const list = res.data.data.dataInfo.list
+					this.totalRow = list.row
+					this.showOrderList = true
+					let getHtmlList = []
+					for (let index in list.dataList) {
+						var dataInfo = list.dataList[index];
+						var tempInfo = {
+							'th_com_name': list.dataList[index]['th_com_name'],
+							'order_index': list.dataList[index]['order_index'],
+							'tb_auto_id': list.dataList[index]['tb_auto_id'],
+							'config_table_id': list.dataList[index]['config_table_id'],
+							'order_id': list.dataList[index]['order_id'],
+							'bgColor': list.dataList[index]['mobsop_line_data_bgcolor'],
+							'bgTitle': list.dataList[index]['mobsop_line_data_title'],
+							'title': "",
+							'descA': "",
+							'descB': "",
+							'descC': "",
+							'descD': ""
+						}
+						for (let key in tableHeadList) {
+							var headInfo = tableHeadList[key];
+							if (typeof(headInfo['comm_set_json']) == 'string') {
+								headInfo['comm_set_json'] = JSON.parse(headInfo['comm_set_json']);
+							}
+
+							//标题
+							if (typeof(headInfo['comm_set_json']['user_head_show_title_mob']) != "undefined") {
+								if (tempInfo['title'] != '') {
+									tempInfo['title'] += " | ";
+								}
+								tempInfo['title'] += dataInfo['th_' + headInfo['config_table_head_id']] ?
+									dataInfo[
+										'th_' + headInfo['config_table_head_id']] : '';
+							}
+
+							//第一级
+							if (typeof(headInfo['comm_set_json']['user_head_show_desc_a_mob']) !=
+								"undefined") {
+								if (tempInfo['descA'] != '') {
+									tempInfo['descA'] += " | ";
+								}
+								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+								}
+								tempInfo['descA'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+									headInfo[
+										'config_table_head_id']] || '-');
+							}
+
+							if (typeof(headInfo['comm_set_json']['user_head_show_desc_b_mob']) !=
+								"undefined") {
+								if (tempInfo['descB'] != '') {
+									tempInfo['descB'] += " | ";
+								}
+								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+								}
+								tempInfo['descB'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+									headInfo[
+										'config_table_head_id']] || '-');
+							}
+
+							if (typeof(headInfo['comm_set_json']['user_head_show_desc_c_mob']) !=
+								"undefined") {
+								if (tempInfo['descC'] != '') {
+									tempInfo['descC'] += " | ";
+								}
+								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+								}
+								tempInfo['descC'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+									headInfo[
+										'config_table_head_id']] || '-');
+							}
+
+							if (typeof(headInfo['comm_set_json']['user_head_show_desc_d_mob']) !=
+								"undefined") {
+								if (tempInfo['descD'] != '') {
+									tempInfo['descD'] += " | ";
+								}
+								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+								}
+								tempInfo['descD'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+									headInfo[
+										'config_table_head_id']] || '-');
+							}
+						}
+						getHtmlList[index] = tempInfo;
+					}
+					this.dataList = getHtmlList
+					//总共有多少页
+					let count = Number(res.data.data.dataInfo.list.row) / 10
+					if (count > parseInt(count)) {
+						this.totalPage = parseInt(count) + 1;
+					} else {
+						this.totalPage = parseInt(count);
+					}
+				}, () => {
+
+				}).catch(err => {
+					console.log(err)
+				})
 			},
 			// 打开施工单号输入框
 			onSetReCode() {
@@ -314,128 +543,20 @@
 							isSopRequest: '1'
 						}
 					}).then(res => {
-						// 获取需要报工的单据
-						return this.$api({
-							url: '/api/data.php',
-							method: 'post',
-							data: {
-								api_class: 'Open_sopEquipmentClass',
-								need_type: 'getMobTableList',
-								mySysId: uni.getStorageSync('mySysId'),
-								loginsession_sop: uni.getStorageSync('loginsession'),
-								config_table_id: this.config_table_id,
-								order_id: res.data.data.order_id,
-								isSopRequest: '1'
-							}
-						})
-					}).then(res => {
 						console.log(res)
 						const {
-							tableHeadList,
-							tableInfo
+							orderInfo,
+							customerInfo,
+							orderFilesList
 						} = res.data.data
-						const list = res.data.data.dataInfo.list
-						this.totalRow = list.row
-						this.showShiGongDH = false
-						this.showOrderList = true
-						let getHtmlList = []
-						for (let index in list.dataList) {
-							var dataInfo = list.dataList[index];
-							var tempInfo = {
-								'th_com_name': list.dataList[index]['th_com_name'],
-								'order_index': list.dataList[index]['order_index'],
-								'tb_auto_id': list.dataList[index]['tb_auto_id'],
-								'config_table_id': list.dataList[index]['config_table_id'],
-								'order_id': list.dataList[index]['order_id'],
-								'bgColor': list.dataList[index]['mobsop_line_data_bgcolor'],
-								'bgTitle': list.dataList[index]['mobsop_line_data_title'],
-								'title': "",
-								'descA': "",
-								'descB': "",
-								'descC': "",
-								'descD': ""
-							}
-							for (let key in tableHeadList) {
-								var headInfo = tableHeadList[key];
-								if (typeof(headInfo['comm_set_json']) == 'string') {
-									headInfo['comm_set_json'] = JSON.parse(headInfo['comm_set_json']);
-								}
-
-								//标题
-								if (typeof(headInfo['comm_set_json']['user_head_show_title_mob']) != "undefined") {
-									if (tempInfo['title'] != '') {
-										tempInfo['title'] += " | ";
-									}
-									tempInfo['title'] += dataInfo['th_' + headInfo['config_table_head_id']] ?
-										dataInfo[
-											'th_' + headInfo['config_table_head_id']] : '';
-								}
-
-								//第一级
-								if (typeof(headInfo['comm_set_json']['user_head_show_desc_a_mob']) !=
-									"undefined") {
-									if (tempInfo['descA'] != '') {
-										tempInfo['descA'] += " | ";
-									}
-									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-									}
-									tempInfo['descA'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-										headInfo[
-											'config_table_head_id']] || '-');
-								}
-
-								if (typeof(headInfo['comm_set_json']['user_head_show_desc_b_mob']) !=
-									"undefined") {
-									if (tempInfo['descB'] != '') {
-										tempInfo['descB'] += " | ";
-									}
-									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-									}
-									tempInfo['descB'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-										headInfo[
-											'config_table_head_id']] || '-');
-								}
-
-								if (typeof(headInfo['comm_set_json']['user_head_show_desc_c_mob']) !=
-									"undefined") {
-									if (tempInfo['descC'] != '') {
-										tempInfo['descC'] += " | ";
-									}
-									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-									}
-									tempInfo['descC'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-										headInfo[
-											'config_table_head_id']] || '-');
-								}
-
-								if (typeof(headInfo['comm_set_json']['user_head_show_desc_d_mob']) !=
-									"undefined") {
-									if (tempInfo['descD'] != '') {
-										tempInfo['descD'] += " | ";
-									}
-									if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-										dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-									}
-									tempInfo['descD'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-										headInfo[
-											'config_table_head_id']] || '-');
-								}
-							}
-							getHtmlList[index] = tempInfo;
-						}
-						this.dataList = getHtmlList
-						//总共有多少页
-						let count = Number(res.data.data.dataInfo.list.row) / 10
-						if (count > parseInt(count)) {
-							this.totalPage = parseInt(count) + 1;
-						} else {
-							this.totalPage = parseInt(count);
-						}
-						console.log(this.dataList)
-					}, () => {
+						this.orderDetail.order_id = orderInfo.order_id
+						this.orderDetail.orderTitle = orderInfo.order_title
+						this.orderDetail.orderNum = orderInfo.order_index
+						this.orderDetail.orderTime = orderInfo.timen_end
+						this.orderDetail.customerInfo = orderInfo.company_name_str
+						this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
+						this.shiGongDImg = orderInfo.order_img || ''
+						this.tuGaoImgList = orderFilesList
 						this.showShiGongDH = false
 					}).catch(err => {
 						console.log(err)
@@ -448,6 +569,7 @@
 			// 选中右侧订单
 			onEditOrder(item, index) {
 				this.orderIndex = index
+				this.showOrderDetail = true
 			},
 			// 执行扫一扫获取单号
 			toScan() {
@@ -483,7 +605,57 @@
 					})
 				}
 			},
-			onSureLink() {}
+			// 预览图片单张
+			previewImg(logourl) {
+				this.$nextTick(function() {
+					this.imgs = [logourl]
+					// this.swiperIndex = 0
+					this.$refs.previewImage.open(this.imgs, 0);
+				})
+				// let _this = this;
+				// let imgsArray = [];
+				// imgsArray[0] = logourl
+				// uni.previewImage({
+				// 	current: 0,
+				// 	urls: imgsArray,
+				// 	indicator:'default'
+				// });
+			},
+			// 多张
+			previewMoreImage(index) {
+				let _this = this;
+				let imgArray = [];
+				for (let i = 0; i < _this.tuGaoImgList.length; i++) {
+					imgArray.push(_this.tuGaoImgList[i].url);
+				}
+				this.$nextTick(function() {
+					this.imgs = imgArray
+					this.swiperIndex = index
+					this.$refs.previewImage.open(this.imgs, this.swiperIndex);
+				})
+				// uni.previewImage({
+				// 	current: index, //当前为第几张
+				// 	urls: imgArray,
+				// 	indicator: 'number',
+				// 	loop: true,
+				// })
+			},
+			// 切换图片
+			onLookImg(type) {
+				if (type == 'sgd') {
+					this.showSGD = true
+				} else {
+					this.showSGD = false
+				}
+			},
+			onSureLink() {
+				if (this.orderIndex != -1) {
+					this.showLink = true
+					// this.linkTitle = this.dataList[this.orderIndex]
+				}
+
+			},
+			onEgg() {}
 		},
 		onUnload() {
 			clearInterval(this.timer2)
@@ -603,6 +775,203 @@
 						padding: 1.5vh 2vh;
 						background-color: #2878FF;
 						border-radius: 5rpx;
+					}
+				}
+			}
+		}
+
+		.dialog-order-detail {
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: rgba($color: #000000, $alpha: .5);
+			z-index: 110;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			.detail-info {
+				width: 68%;
+				height: 64%;
+				border: 1rpx solid #42B5F1;
+				border-radius: 11rpx;
+				background-color: #090E21;
+
+				.detail-header {
+					height: 8%;
+					background: #081D38;
+					border-radius: 11rpx 11rpx 0rpx 0rpx;
+					padding: 1.5vh 2vw;
+
+					.header-tex {
+						font-size: 1.2vw;
+						color: #A6C4E6;
+					}
+
+					.img-close {
+						width: 1.3vw;
+						height: 1.3vw;
+					}
+				}
+
+				.detail-content {
+					width: 100%;
+					height: 92%;
+
+					.detail-con-left {
+						width: 63%;
+						height: 100%;
+						flex-direction: column;
+						color: #A6C4E6;
+						// font-size: 10rpx;
+						font-size: 1.5vw;
+						// font-weight: bold;
+						// padding: 15rpx 0 0 14rpx;
+						padding: 3vh 0 0 3vh;
+						position: relative;
+
+						.left-item {;
+							margin: 3vh 0;
+
+							input {
+								width: 17vw;
+								padding: 5rpx 0;
+								// height: 10rpx;
+								background: #0A223B;
+								border: 1rpx solid #0A223B;
+								border-radius: 5rpx;
+								padding: 5rpx 16rpx;
+								outline: 0;
+								font-size: 1.5vw;
+								font-weight: bold;
+								color: #A4CEF4;
+								height: 3.5vh;
+
+								&:focus {
+									border: 1rpx solid #00FFFF;
+									outline: 0;
+								}
+							}
+
+							.input-selected {
+								border: 1rpx solid #00FFFF;
+							}
+
+							.type-btn {
+								width: 70%;
+
+								.type-item {
+									padding: 5rpx 12rpx;
+									background: #061830;
+									border-radius: 5rpx;
+									font-size: 1.5vw;
+								}
+
+								.type-item-selected {
+									background: #A6C4E6;
+									color: #FFFFFF;
+								}
+							}
+						}
+
+						.left-switch {
+							width: 90%;
+							position: absolute;
+							bottom: 20px;
+
+							switch {
+								opacity: .8;
+							}
+						}
+					}
+
+					.detail-con-right {
+						width: 37%;
+						height: 100%;
+						background-color: #061830;
+						border-radius: 0rpx 11rpx 11rpx 0rpx;
+						border-left: 1rpx solid #42B5F1;
+
+						.jsq {
+							width: 100%;
+							height: 80%;
+							flex-wrap: wrap;
+
+							.jsq-item {
+								flex: 1;
+								width: 33.3%;
+								min-width: 33.3%;
+								max-width: 33.3%;
+								font-size: 3vw;
+								font-weight: 600;
+								color: #FFFFFF;
+								border-bottom: 1rpx solid #68686F;
+								border-right: 1rpx solid #68686F;
+
+								image {
+									width: 2vw;
+									height: 2vw;
+									position: absolute;
+									// margin-top: 14rpx;
+									// margin-left: -14rpx;
+								}
+							}
+
+							.border-right-none {
+								border-right: none
+							}
+
+							.border-bottom-none {
+								border-bottom: none
+							}
+						}
+
+						.edit-btn {
+							width: 100%;
+							height: 20%;
+							color: #FFFFFF;
+							font-size: 1.5vw;
+							// background: #73C7EF;
+							border-radius: 0 0 9rpx 0;
+							padding: 0 1vh;
+
+							input {
+								width: 70%;
+								background: #0A223B;
+								border-radius: 0.5vh 0 0 0.5vh;
+								padding: 2vh 2.2vw 2vh 0.8vw;
+								outline: 0;
+								position: relative;
+								border: 1rpx solid #73C7EF;
+
+								&:focus {
+									border: 1rpx solid #00FFFF;
+								}
+							}
+
+							.place-class {
+								font-size: 1.5vw;
+								color: #9CC8ED;
+							}
+
+							.input-close {
+								position: absolute;
+								width: 2.5vw;
+								height: 2.5vw;
+								margin-left: 5vw;
+							}
+
+							.submit-btn {
+								width: 20%;
+								font-size: 1.5vw;
+								padding: 1.8vh 2vh;
+								width: 10vh;
+								background: #73C7EF;
+								border-radius: 0 0.5vh 0.5vh 0;
+							}
+						}
 					}
 				}
 			}
@@ -799,6 +1168,7 @@
 
 						.value-item {
 							padding: 5rpx;
+							flex-wrap: wrap;
 
 							.value {
 								width: 2vw;
@@ -835,7 +1205,6 @@
 						height: 85%;
 						width: 80%;
 						overflow: auto;
-						flex-direction: row;
 						flex-wrap: wrap;
 
 						.btm-steps {
@@ -923,9 +1292,9 @@
 
 				.right-image {
 					width: 31vw;
-					// height: 72%;
+					height: 72%;
 					margin: 2.5vh 0;
-					flex: 1;
+					// flex: 1;
 
 					image {
 						max-height: 100%;

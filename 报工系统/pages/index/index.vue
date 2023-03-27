@@ -132,6 +132,7 @@
 						api_class: 'Open_sopEquipmentClass',
 						need_type: 'checkNetOnLineFun',
 						mySysId: this.formList[0].value,
+						isSopRequest: "1"
 					}
 				}).then(res => {
 					this.UPDATE_WIFI(true)
@@ -144,6 +145,7 @@
 							mySysId: this.formList[0].value,
 							sop_equipment_account: this.formList[1].value,
 							sop_equipment_password: this.formList[2].value,
+							isSopRequest: "1"
 						}
 					})
 				}).then((res) => {
