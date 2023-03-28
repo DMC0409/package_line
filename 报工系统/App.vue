@@ -11,6 +11,7 @@
 		},
 		onLaunch: function() {
 			console.log('App Launch')
+			plus.screen.lockOrientation('landscape-primary'); //锁定
 		},
 		onShow: function() {
 			console.log('App Show')

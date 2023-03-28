@@ -54,7 +54,7 @@
 				currentIndex: 0,
 				formList: [{
 						label: '系统编号',
-						value: '947535',
+						value: '',
 						focus: false,
 					},
 					// {
@@ -64,11 +64,11 @@
 					// },
 					{
 						label: 'SOP账户',
-						value: '123456',
+						value: '',
 						focus: false,
 					}, {
 						label: 'SOP密码',
-						value: '654321',
+						value: '',
 						focus: false,
 					},
 					// {

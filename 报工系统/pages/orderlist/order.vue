@@ -83,8 +83,11 @@
 								</view>
 								<view class="left-item flex align-center"
 									v-else-if="item.head_input_save ==1 || item.head_input_save ==2">
-									{{item.head_name||''}}：<input type="text" :value="item.head_input_value"
-										:class="inputIndex==index ?'input-selected':''" @click="onFocusValue(index)" />
+									{{item.head_name||''}}：
+									<view class="eachInput" :class="inputIndex==index ?'input-selected':''"
+										@click="onFocusValue(index)">
+										{{item.head_input_value}}
+									</view>
 								</view>
 							</block>
 						</view>
@@ -108,18 +111,23 @@
 							<view class="jsq-item flex justify-center align-center border-right-none"
 								@tap="onClickNum('.')">.</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('-')">-</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('清除')">清除</view>
+							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('clear')">清除</view>
 							<view class="jsq-item flex justify-center align-center border-right-none"
 								@tap="onClickNum('del')">
 								<image src="../../static/image/icon-jsq-close.png"></image>
 							</view>
 						</view>
 						<view class="edit-btn flex align-center justify-center">
-							<input type="text" v-model="emploId" @input="onInputValue" placeholder="员工卡号"
-								placeholder-class="place-class" />
-							<image class="input-close" @tap.stop="onDelInput" src="../../static/image/input-close.png">
-							</image>
-							<view class="submit-btn" @click="onSureEdit">提交</view>
+							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
+								:class="inputIndex == -1?'checkOut':''">
+								<view class="">
+									{{emploId == ""?'员工卡号':emploId}}
+								</view>
+								<image class="input-close" @tap.stop="onDelInput"
+									src="../../static/image/input-close.png">
+								</image>
+							</view>
+							<view class="submit-btn flex align-center justify-center" @click="onSureEdit">提交</view>
 						</view>
 					</view>
 				</view>
@@ -147,7 +155,7 @@
 		<view class="dialog-order" v-if="showOrderList" ref="msk" @click="showOrderList = false">
 			<!-- 订单 -->
 			<view class="order-info" @click.stop="onEgg">
-				<view class="order-header flex align-center justify-between">
+				<view class="order-header flex align-end justify-between">
 					<view class="header-tex">共计：{{totalRow}}条</view>
 					<image @click="showOrderList = false" class="img-close"
 						src="../../static/image/right-back-close.png">
@@ -311,6 +319,7 @@
 				stepsIndex: -1,
 				stepsList: [],
 				config_table_id: '',
+				tb_auto_id: '',
 
 				showList: true,
 				showSGD: false,
@@ -336,10 +345,11 @@
 					}
 				}, //点击新增所有信息
 				dataDetailList: [],
-				inputIndex: 0,
+				inputIndex: -1,
 				showOrderDetail: false,
 				emploId: '',
 				getFocus: true,
+				Value: [],
 
 				timer: null,
 				timer2: null,
@@ -422,7 +432,6 @@
 						isSopRequest: '1'
 					}
 				}).then(res => {
-					console.log(res)
 					const {
 						tableHeadList,
 						tableInfo
@@ -433,7 +442,6 @@
 					let getHtmlList = []
 					for (let index in list.dataList) {
 						var dataInfo = list.dataList[index];
-						console.log(list.dataList[index])
 						var tempInfo = {
 							'th_com_name': list.dataList[index]['th_com_name'],
 							'order_index': list.dataList[index]['order_index'],
@@ -577,10 +585,10 @@
 			},
 			// 选中右侧订单
 			onEditOrder(item, index) {
-				console.log(item)
 				this.orderIndex = index
 				this.showOrderDetail = true
 				this.dataDetailAllList.order_index = item.order_index
+				this.tb_auto_id = item.tb_auto_id
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -591,37 +599,117 @@
 						loginsession_sop: uni.getStorageSync('loginsession'),
 						config_table_id: this.config_table_id,
 						order_id: this.orderDetail.order_id,
-						src_tb_auto_id: item.tb_auto_id,
+						src_tb_auto_id: this.tb_auto_id,
 						src_config_table_id: this.config_table_id,
 						table_about_job: 'report',
-						tb_auto_id: item.tb_auto_id,
+						tb_auto_id: this.tb_auto_id,
 						isSopRequest: '1'
 					}
 				}).then(res => {
-					console.log(res)
 					this.dataDetailList = res.data.data.tableHeadList.filter(item => {
-						return item.head_input_save == 1 || item.head_input_save == 2 || item
-							.head_input_set == 20 || item.head_input_set == 21
+						if (item.head_style == '0') {
+							return item.head_input_save == 1 || item.head_input_save == 2 || item
+								.head_input_set == 20 || item.head_input_set == 21
+						}
 					})
 					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
 					this.dataDetailAllList.yieldInfo = res.data.data.yieldInfo
-					console.log(this.dataDetailList)
 				}).catch(err => {
 					console.log(err)
 				})
 			},
 			//左侧选择类型
 			onClickOrderIndex(index, ind) {
-				this.typeIndex = ind
-				this.typeMainIndex = index
 				this.inputIndex = index + 1
 				this.$set(this.dataDetailList[index], 'head_input_value', ind)
 			},
 			//取消input调起键盘事件
 			onFocusValue(index) {
 				// uni.hideKeyboard();
+				this.Value = []
 				this.inputIndex = index || 0
 				this.$set(this.dataDetailList[index], 'head_input_value', this.dataDetailList[index].head_input_value)
+			},
+			//键盘
+			onClickNum(num) {
+				let headValue
+				if (this.inputIndex == -1) {
+					headValue = this.emploId
+				} else {
+					headValue = this.dataDetailList[this.inputIndex].head_input_value
+				}
+				if (num == 'del') {
+					headValue = headValue.substring(0, headValue.length - 1)
+					this.Value = headValue.split(',')
+				} else if (num == 'clear') {
+					this.Value = []
+					headValue = ''
+				} else {
+					this.Value.push(num)
+					headValue = this.Value.join('')
+				}
+				if (this.inputIndex == -1) {
+					this.emploId = headValue
+				} else {
+					this.$set(this.dataDetailList[this.inputIndex], 'head_input_value', headValue)
+				}
+			},
+			toEditCard() {
+				this.inputIndex = -1
+				this.Value = this.emploId.split('')
+			},
+			onDelInput() {
+				this.emploId = '';
+				this.Value = []
+			},
+			onSureEdit() {
+				if (this.emploId == '') {
+					return uni.showToast({
+						title: '请输入员工卡号',
+						icon: 'error',
+						duration: 2000
+					})
+				}
+				let dataList = []
+				this.dataDetailList.map(item => {
+					if (item.head_input_value) {
+						dataList.push({
+							name: item.config_table_head_id,
+							value: item.head_input_value.toString(),
+							str: item.head_input_setjson.length == 0 ? item.head_input_value : item
+								.head_input_setjson[item.head_input_value].label
+						})
+					}
+				})
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'mobSetTableDataInfoFun',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						tb_auto_id: 0,
+						// tb_auto_id: this.tb_auto_id,
+						set_from_config_table_id: this.config_table_id,
+						set_from_tb_auto_id: this.tb_auto_id,
+						order_id: this.orderDetail.order_id,
+						config_table_id: this.config_table_id,
+						data_list: dataList,
+						finger_print: this.emploId,
+						isSopRequest: '1'
+					}
+				}).then(res => {
+					console.log(res)
+					uni.showToast({
+						title: '报工成功',
+						icon: 'success',
+						duration: 2000
+					})
+					this.onCloseDataDetail()
+				}).catch(err => {
+					console.log(err)
+				})
 			},
 			// 执行扫一扫获取单号
 			toScan() {
@@ -905,10 +993,10 @@
 						.left-item {
 							margin: 3vh 0;
 
-							input {
+							.eachInput {
 								width: 17vw;
-								padding: 5rpx 0;
-								// height: 10rpx;
+								height: 2vw;
+								line-height: 2vw;
 								background: #0A223B;
 								border: 1rpx solid #0A223B;
 								border-radius: 5rpx;
@@ -917,12 +1005,6 @@
 								font-size: 1.5vw;
 								font-weight: bold;
 								color: #A4CEF4;
-								height: 3.5vh;
-
-								&:focus {
-									border: 1rpx solid #00FFFF;
-									outline: 0;
-								}
 							}
 
 							.input-selected {
@@ -998,29 +1080,22 @@
 							margin: 0 auto;
 							color: #FFFFFF;
 							font-size: 1.5vw;
-							// background: #73C7EF;
 
-							input {
+							.inputContent {
 								width: 70%;
+								height: 50%;
+								color: #9CC8ED;
 								background: #0A223B;
-								border-radius: 0.5vh 0 0 0.5vh;
-								padding: 2vh 2.2vw 2vh 0.8vw;
-								outline: 0;
-								position: relative;
-								border: 1rpx solid #73C7EF;
-
-								&:focus {
-									border: 1rpx solid #00FFFF;
-								}
+								border-top-left-radius: 0.5vh;
+								border-bottom-left-radius: 0.5vh;
+								box-sizing: border-box;
 							}
 
-							.place-class {
-								font-size: 1.5vw;
-								color: #9CC8ED;
+							.checkOut {
+								border: 1rpx solid #00FFFF;
 							}
 
 							.input-close {
-								position: absolute;
 								width: 2.5vw;
 								height: 2.5vw;
 								margin-left: 3vw;
@@ -1028,8 +1103,8 @@
 
 							.submit-btn {
 								width: 20%;
+								height: 50%;
 								font-size: 1.5vw;
-								padding: 1.7vh 2vh;
 								background: #73C7EF;
 								border-radius: 0 0.5vh 0.5vh 0;
 								text-align: center;
@@ -1107,9 +1182,9 @@
 				color: #222222;
 
 				.order-header {
-					padding: 8rpx 10rpx 8rpx 20rpx;
+					padding: 0 10rpx 10rpx 20rpx;
 					background-color: #96CDF7;
-					height: 6vh;
+					height: 7%;
 
 					.header-tex {
 						font-size: 1vw;
@@ -1125,7 +1200,7 @@
 				.order-list {
 					font-size: 2vh;
 					color: #080b15;
-					height: 84%;
+					height: 83%;
 					overflow: auto;
 
 					.order-list-item {
