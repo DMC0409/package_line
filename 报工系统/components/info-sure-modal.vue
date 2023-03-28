@@ -5,15 +5,7 @@
 				<div class="status-icon sa-info" style="display: block;"></div>
 				<h2 class="h2">您要确认本环节{{title}}结束吗?</h2>
 				<view class="input-content">
-					<input
-						class="input-value"
-						placeholder="员工卡号"
-						placeholder-class="place-class"
-						:focus="getFocus"
-						@blur="getFocus1"
-						:value="link"
-						@input="onInputValue"
-						@confirm="onSureLink"
+					<input class="input-value" placeholder="员工卡号" placeholder-class="place-class" v-model="link"
 						type="text" />
 					<view style="display: flex;width: 100%;justify-content: space-around;margin-bottom: 1vh;">
 						<view class="submit-btn" @click="onDelValue">重置</view>
@@ -22,7 +14,7 @@
 				</view>
 			</view>
 		</view>
-		<model :showModalData.sync="showModalData" :info="dataInfo" :type="dataType" />
+		<!-- <model :showModalData.sync="showModalData" :info="dataInfo" :type="dataType" /> -->
 	</view>
 </template>
 
@@ -39,7 +31,6 @@
 				showModalData: false,
 				dataInfo: '',
 				dataType: '',
-				getFocus: true,
 			};
 		},
 		props: {
@@ -56,6 +47,14 @@
 			title: {
 				type: String,
 				default: ''
+			},
+			configTableId: {
+				type: String,
+				default: ''
+			},
+			orderId: {
+				type: String,
+				default: ''
 			}
 		},
 		watch: {
@@ -64,38 +63,27 @@
 			}
 		},
 		methods: {
-			async onSureLink(e) {
-				this.link = e.detail.value
-				let payload = {
-					...this.vuex_payload,
-					needtype: 'setLIstCheckDoneFun',
-					config_table_id: this.rowData.config_table_id,
-					order_id: this.rowData.order_id,
-					// tb_auto_id:this.rowData.tb_auto_id,
-					finger_print: this.link || ''
-				};
-
-				const res = await this.$u.api.getData(payload);
-				if (res.data.sign == 1) {
-					this.showModalData = true
-					this.dataType = 'success'
-				} else {
-					this.showModalData = true
-					this.dataInfo = res.data.info
-					this.dataType = 'error'
-				}
+			onSureLink() {
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'setListCheckDoneFun',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						config_table_id: this.configTableId,
+						order_id: this.orderId,
+						finger_print: this.link,
+						isSopRequest: '1'
+					}
+				}).then(res => {
+					console.log(res)
+				}, () => {}).catch(err => {
+					console.log(err)
+				})
 				this.link = ''
-				this.$emit('update:showLink', false)
-			},
-			getFocus1() { //当失去焦点时重新
-				let _that = this;
-				_that.getFocus = false;
-				setTimeout(function() {
-					_that.getFocus = true;
-				}, 100)
-			},
-			onInputValue(e) {
-				this.link = e.detail.value
+				this.onCloseModal()
 			},
 			onDelValue() {
 				this.link = ''

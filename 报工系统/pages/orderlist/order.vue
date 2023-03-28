@@ -4,14 +4,19 @@
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
 		<!-- 确认结束环节弹窗 -->
-		<info-sure-modal :showLink.sync="showLink" :rowData="rowData" :title="linkTitle" />
+		<info-sure-modal :showLink.sync="showLink" :rowData="rowData" :orderId="orderDetail.order_id"
+			:configTableId="config_table_id" :title="linkTitle" />
 		<!-- 设置框 -->
 		<view class="dialog-slot-card flex align-center justify-center" v-if="showSetting" @click="showSetting=false">
 			<view class="setting-div flex align-center justify-center" @click.stop="onEgg">
 				<view class="set-title">设置</view>
 				<view class="set-btn-div flex justify-around">
-					<view class="set-btn" @click.stop="onInitSet('init')">初始化设定</view>
-					<view class="set-btn" @click.stop="onInitSet('toface')">人脸识别</view>
+					<view class="set-btn" @click.stop="onInitSet('init')">
+						初始化设定
+					</view>
+					<view class="set-btn" @click.stop="onInitSet('toface')">
+						人脸识别
+					</view>
 				</view>
 			</view>
 		</view>
@@ -53,24 +58,25 @@
 		<view class="dialog-order-detail" v-if="showOrderDetail" @click="showOrderDetail = false">
 			<view class="detail-info" @click.stop="onEgg">
 				<view class="detail-header flex align-center justify-between">
-					<view class="header-tex">{{dataDetailAllList.formTitle}}</view>
+					<view class="header-tex">No. {{dataDetailAllList.order_index}}</view>
 					<image @click="onCloseDataDetail" class="img-close" src="../../static/image/icon-close.png">
 					</image>
 				</view>
-				<viwe class="detail-content flex">
+				<view class="detail-content flex">
 					<view class="detail-con-left flex">
-						<view style="height:80%;overflow: auto;">
+						<view style="height:90%;overflow: auto;">
 							<view>
 								订单需要：
-								<!-- {{dataDetailAllList.yieldInfo.all ||0}}， -->
+								{{dataDetailAllList.yieldInfo.all.num ||0}}，
 								已经报工：
-								<!-- {{dataDetailAllList.yieldInfo.curr||0}} -->
+								{{dataDetailAllList.yieldInfo.curr.num||0}}
 							</view>
-							<!-- <block v-for="(item,index) in dataDetailList" :key="index">
-								<view class="left-item flex align-center" v-if="item.head_input_set == 20 || item.head_input_set ==21">
+							<block v-for="(item,index) in dataDetailList" :key="index">
+								<view class="left-item flex align-center"
+									v-if="item.head_input_set == 20 || item.head_input_set ==21">
 									{{item.head_name ||''}}：
-									<view class="type-btn flex align-center justify-around">
-										<view v-for="(val,ind) in JSON.parse(item.head_input_setjson)" :key="ind"
+									<view class="type-btn flex align-center justify-start">
+										<view v-for="(val,ind) in item.head_input_setjson" :key="ind"
 											:class="item.head_input_value === ind?'type-item type-item-selected':'type-item'"
 											@click="onClickOrderIndex(index,ind)">{{val.name}}</view>
 									</view>
@@ -78,53 +84,45 @@
 								<view class="left-item flex align-center"
 									v-else-if="item.head_input_save ==1 || item.head_input_save ==2">
 									{{item.head_name||''}}：<input type="text" :value="item.head_input_value"
-										:class="inputIndex==index ?'input-selected':''" @click="onFocusValue(index)"
-										disabled />
+										:class="inputIndex==index ?'input-selected':''" @click="onFocusValue(index)" />
 								</view>
-							</block> -->
-						</view>
-						<view class="left-switch flex align-center justify-between">
-							<view class="switch-title">
-								<!-- {{dataDetailAllList.list_Info.list_name}}- -->
-								<!-- <span v-if="dataDetailAllList.list_log_Info.list_status === '100'"> 是否驳回?</span> -->
-								是否驳回?
-								<!-- <span v-else> 是否完成?</span> -->
-								<span>是否完成?</span>
-							</view>
-							<switch color="#007AFF" @change="onChangeChecked" />
+							</block>
 						</view>
 					</view>
 					<view class="detail-con-right">
 						<view class="jsq flex">
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('1')">1</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('2')">2</view>
-							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('3')">3</view>
+							<view class="jsq-item flex justify-center align-center border-right-none"
+								@tap="onClickNum('3')">3</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('4')">4</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('5')">5</view>
-							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('6')">6</view>
+							<view class="jsq-item flex justify-center align-center border-right-none"
+								@tap="onClickNum('6')">6</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('7')">7</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('8')">8</view>
-							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('9')">9</view>
+							<view class="jsq-item flex justify-center align-center border-right-none"
+								@tap="onClickNum('9')">9</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('*')">*</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('0')">0</view>
-							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('.')">.</view>
+							<view class="jsq-item flex justify-center align-center border-right-none"
+								@tap="onClickNum('.')">.</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('-')">-</view>
 							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('清除')">清除</view>
-							<view class="jsq-item flex justify-center align-center border-right-none" @tap="onClickNum('del')">
+							<view class="jsq-item flex justify-center align-center border-right-none"
+								@tap="onClickNum('del')">
 								<image src="../../static/image/icon-jsq-close.png"></image>
 							</view>
 						</view>
-						<!-- <view class="edit-btn" @click="onSureEdit">{{!AddSuccess?'确认':'修改'}}</view> -->
 						<view class="edit-btn flex align-center justify-center">
-							<input type="text" :value="emploId" @input="onInputValue" @confirm="onSureEdit"
-								:focus="getFocus" @blur="getFocus1()" placeholder="员工卡号"
+							<input type="text" v-model="emploId" @input="onInputValue" placeholder="员工卡号"
 								placeholder-class="place-class" />
 							<image class="input-close" @tap.stop="onDelInput" src="../../static/image/input-close.png">
 							</image>
 							<view class="submit-btn" @click="onSureEdit">提交</view>
 						</view>
 					</view>
-				</viwe>
+				</view>
 			</view>
 		</view>
 		<!-- 头部 -->
@@ -260,7 +258,8 @@
 						</view>
 					</view>
 				</view>
-				<view class="data-none none-img" v-if="(showSGD&&!shiGongDImg)||(!showSGD&&tuGaoImgList.length<=0) ">
+				<view class="data-none none-img flex align-center justify-center"
+					v-if="(showSGD&&!shiGongDImg)||(!showSGD&&tuGaoImgList.length<=0) ">
 					暂无图片
 				</view>
 				<!-- <view class="right-head flex align-center justify-around" v-if="showList">
@@ -311,7 +310,7 @@
 
 				stepsIndex: -1,
 				stepsList: [],
-				config_table_id: -1,
+				config_table_id: '',
 
 				showList: true,
 				showSGD: false,
@@ -329,9 +328,18 @@
 				showLink: false,
 				rowData: {},
 				linkTitle: '',
-				
-				dataDetailAllList: {}, //点击新增所有信息
+
+				dataDetailAllList: {
+					yieldInfo: {
+						all: 0,
+						curr: 0
+					}
+				}, //点击新增所有信息
+				dataDetailList: [],
+				inputIndex: 0,
 				showOrderDetail: false,
+				emploId: '',
+				getFocus: true,
 
 				timer: null,
 				timer2: null,
@@ -425,6 +433,7 @@
 					let getHtmlList = []
 					for (let index in list.dataList) {
 						var dataInfo = list.dataList[index];
+						console.log(list.dataList[index])
 						var tempInfo = {
 							'th_com_name': list.dataList[index]['th_com_name'],
 							'order_index': list.dataList[index]['order_index'],
@@ -543,7 +552,6 @@
 							isSopRequest: '1'
 						}
 					}).then(res => {
-						console.log(res)
 						const {
 							orderInfo,
 							customerInfo,
@@ -552,7 +560,8 @@
 						this.orderDetail.order_id = orderInfo.order_id
 						this.orderDetail.orderTitle = orderInfo.order_title
 						this.orderDetail.orderNum = orderInfo.order_index
-						this.orderDetail.orderTime = orderInfo.timen_end
+						this.orderDetail.orderTime = this.$moment(Number(orderInfo.timen_end * 1000)).format(
+							'YYYY-MM-DD')
 						this.orderDetail.customerInfo = orderInfo.company_name_str
 						this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
 						this.shiGongDImg = orderInfo.order_img || ''
@@ -568,8 +577,51 @@
 			},
 			// 选中右侧订单
 			onEditOrder(item, index) {
+				console.log(item)
 				this.orderIndex = index
 				this.showOrderDetail = true
+				this.dataDetailAllList.order_index = item.order_index
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'getTableDataInfoFun',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						config_table_id: this.config_table_id,
+						order_id: this.orderDetail.order_id,
+						src_tb_auto_id: item.tb_auto_id,
+						src_config_table_id: this.config_table_id,
+						table_about_job: 'report',
+						tb_auto_id: item.tb_auto_id,
+						isSopRequest: '1'
+					}
+				}).then(res => {
+					console.log(res)
+					this.dataDetailList = res.data.data.tableHeadList.filter(item => {
+						return item.head_input_save == 1 || item.head_input_save == 2 || item
+							.head_input_set == 20 || item.head_input_set == 21
+					})
+					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
+					this.dataDetailAllList.yieldInfo = res.data.data.yieldInfo
+					console.log(this.dataDetailList)
+				}).catch(err => {
+					console.log(err)
+				})
+			},
+			//左侧选择类型
+			onClickOrderIndex(index, ind) {
+				this.typeIndex = ind
+				this.typeMainIndex = index
+				this.inputIndex = index + 1
+				this.$set(this.dataDetailList[index], 'head_input_value', ind)
+			},
+			//取消input调起键盘事件
+			onFocusValue(index) {
+				// uni.hideKeyboard();
+				this.inputIndex = index || 0
+				this.$set(this.dataDetailList[index], 'head_input_value', this.dataDetailList[index].head_input_value)
 			},
 			// 执行扫一扫获取单号
 			toScan() {
@@ -649,11 +701,11 @@
 				}
 			},
 			onSureLink() {
-				if (this.orderIndex != -1) {
-					this.showLink = true
-					// this.linkTitle = this.dataList[this.orderIndex]
-				}
-
+				this.showLink = true
+				// this.linkTitle = this.dataList[this.orderIndex]
+			},
+			onCloseDataDetail() {
+				this.showOrderDetail = false
 			},
 			onEgg() {}
 		},
@@ -669,6 +721,24 @@
 		height: 100vh;
 		// padding-top: 5vh;
 		flex-direction: column;
+
+		.data-none {
+			color: #A6C4E6;
+			font-size: 1.5vw;
+			text-align: center;
+			width: 100%;
+			padding: 10vh 0;
+		}
+
+		.none-img {
+			width: 31vw;
+			height: 57%;
+			margin: 2vh 0;
+			background-color: #224C7B;
+			color: #9FC4E1;
+			border-radius: 1vw;
+			font-size: 3vw;
+		}
 
 		.dialog-slot-card {
 			position: fixed;
@@ -800,10 +870,10 @@
 				background-color: #090E21;
 
 				.detail-header {
-					height: 8%;
+					height: 10%;
 					background: #081D38;
 					border-radius: 11rpx 11rpx 0rpx 0rpx;
-					padding: 1.5vh 2vw;
+					padding: 0 2vw;
 
 					.header-tex {
 						font-size: 1.2vw;
@@ -818,7 +888,7 @@
 
 				.detail-content {
 					width: 100%;
-					height: 92%;
+					height: 90%;
 
 					.detail-con-left {
 						width: 63%;
@@ -832,7 +902,7 @@
 						padding: 3vh 0 0 3vh;
 						position: relative;
 
-						.left-item {;
+						.left-item {
 							margin: 3vh 0;
 
 							input {
@@ -861,8 +931,10 @@
 
 							.type-btn {
 								width: 70%;
+								flex-wrap: wrap;
 
 								.type-item {
+									margin: 10rpx;
 									padding: 5rpx 12rpx;
 									background: #061830;
 									border-radius: 5rpx;
@@ -875,16 +947,6 @@
 								}
 							}
 						}
-
-						.left-switch {
-							width: 90%;
-							position: absolute;
-							bottom: 20px;
-
-							switch {
-								opacity: .8;
-							}
-						}
 					}
 
 					.detail-con-right {
@@ -893,6 +955,7 @@
 						background-color: #061830;
 						border-radius: 0rpx 11rpx 11rpx 0rpx;
 						border-left: 1rpx solid #42B5F1;
+						box-sizing: border-box;
 
 						.jsq {
 							width: 100%;
@@ -909,6 +972,7 @@
 								color: #FFFFFF;
 								border-bottom: 1rpx solid #68686F;
 								border-right: 1rpx solid #68686F;
+								box-sizing: border-box;
 
 								image {
 									width: 2vw;
@@ -929,13 +993,12 @@
 						}
 
 						.edit-btn {
-							width: 100%;
+							width: 95%;
 							height: 20%;
+							margin: 0 auto;
 							color: #FFFFFF;
 							font-size: 1.5vw;
 							// background: #73C7EF;
-							border-radius: 0 0 9rpx 0;
-							padding: 0 1vh;
 
 							input {
 								width: 70%;
@@ -960,16 +1023,16 @@
 								position: absolute;
 								width: 2.5vw;
 								height: 2.5vw;
-								margin-left: 5vw;
+								margin-left: 3vw;
 							}
 
 							.submit-btn {
 								width: 20%;
 								font-size: 1.5vw;
-								padding: 1.8vh 2vh;
-								width: 10vh;
+								padding: 1.7vh 2vh;
 								background: #73C7EF;
 								border-radius: 0 0.5vh 0.5vh 0;
+								text-align: center;
 							}
 						}
 					}
