@@ -75,20 +75,25 @@
 							</view>
 							<block v-for="(item,index) in dataDetailList" :key="index">
 								<view class="left-item flex align-center"
-									v-if="item.head_input_set == 20 || item.head_input_set ==21">
+									v-if="item.head_style == '0' && item.comm_set_json.show_job_submission!=undefined">
 									{{item.head_name ||''}}：
-									<view class="type-btn flex align-center justify-start">
+									<view v-if="item.head_input_set == 30 || item.head_input_set ==31"
+										class="type-btn flex align-center justify-start">
 										<view v-for="(val,ind) in item.head_input_setjson" :key="ind"
 											:class="item.head_input_value === ind?'type-item type-item-selected':'type-item'"
 											@click="onClickOrderIndex(index,ind)">{{val.name}}</view>
 									</view>
-								</view>
-								<view class="left-item flex align-center"
-									v-else-if="item.head_input_save ==1 || item.head_input_save ==2">
-									{{item.head_name||''}}：
-									<view class="eachInput" :class="inputIndex==index ?'input-selected':''"
+									<view v-else-if="item.head_input_set == 20 || item.head_input_set ==21"
+										class="type-btn flex align-center justify-start">
+										<view>{{item.this_str}}</view>
+									</view>
+									<view v-else-if="item.head_input_save ==1 || item.head_input_save ==2"
+										class="eachInput" :class="inputIndex==index ?'input-selected':''"
 										@click="onFocusValue(index)">
-										{{item.head_input_value}}
+										{{item.this_value}}
+									</view>
+									<view v-else>
+										{{item.this_str}}
 									</view>
 								</view>
 							</block>
@@ -612,12 +617,8 @@
 						isSopRequest: '1'
 					}
 				}).then(res => {
-					this.dataDetailList = res.data.data.tableHeadList.filter(item => {
-						if (item.head_style == '0') {
-							return item.head_input_save == 1 || item.head_input_save == 2 || item
-								.head_input_set == 20 || item.head_input_set == 21
-						}
-					})
+					this.dataDetailList = res.data.data.tableHeadList
+					console.log(this.dataDetailList)
 					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
 					this.dataDetailAllList.yieldInfo = res.data.data.yieldInfo
 				}).catch(err => {
