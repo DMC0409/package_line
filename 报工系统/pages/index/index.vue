@@ -10,7 +10,8 @@
 					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
 						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
 				</view>
-				<button class="btn" :loading="loading" @click="handleLogin">开始使用</button>
+				<button class="btn flex align-center justify-center" :loading="loading"
+					@click="handleLogin">开始使用</button>
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
@@ -86,6 +87,7 @@
 			if (uni.getStorageSync('mySysId')) {
 				this.formList[0].value = uni.getStorageSync('mySysId')
 			}
+			this.checkVersion()
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI']),
@@ -136,7 +138,7 @@
 					}
 				}).then(res => {
 					this.UPDATE_WIFI(true)
-					return this.$api({
+					this.$api({
 						url: '/api/data.php',
 						method: 'post',
 						data: {
@@ -147,27 +149,89 @@
 							sop_equipment_password: this.formList[2].value,
 							isSopRequest: "1"
 						}
-					})
-				}).then((res) => {
-					this.loading = false;
-					uni.showToast({
-						icon: 'success',
-						title: '登陆成功',
-						duration: 2000
-					})
-					// uni.setStorageSync('tokenInfo', res.data.data.tokenInfo)
-					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
-					uni.setStorageSync('mySysId', this.formList[0].value)
-					uni.reLaunch({
-						url: '../orderlist/order'
+					}).then((res) => {
+						this.loading = false;
+						uni.showToast({
+							icon: 'success',
+							title: '登陆成功',
+							duration: 2000
+						})
+						uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
+						uni.setStorageSync('mySysId', this.formList[0].value)
+						uni.reLaunch({
+							url: '../orderlist/order'
+						})
+					}, () => {
+						this.loading = false;
+					}).catch(() => {
+						this.loading = false;
 					})
 				}, () => {
-					this.loading = false;
 					this.UPDATE_WIFI(false)
+					this.loading = false;
+					uni.showToast({
+						title: '请检查网络连接',
+						icon: 'error',
+						duration: 2000
+					})
 				}).catch(() => {
 					this.loading = false;
 				})
 			},
+			checkVersion() {
+				this.$api({
+						url: '/api/data.php',
+						method: 'post',
+						data: {
+							api_class: 'Open_sopEquipmentClass',
+							need_type: 'getSopVersionFun',
+							mySysId: uni.getStorageSync('mySysId'),
+							isSopRequest: "1"
+						}
+					}).then(res => {
+						plus.runtime.getProperty(plus.runtime.appid, (appData) => {
+							// 版本不同则进行下载
+							let url = res.data.data.downloadLink
+							if (res.data.data.versionNum != appData.version) {
+								uni.downloadFile({
+									url,
+									success: (res) => {
+										console.log(res)
+										if (res.statusCode != 200) {
+											return uni.showToast({
+												title: '下载安装包失败',
+												icon: 'error',
+												duration: 2000
+											})
+										}
+										plus.runtime.install(res.tempFilePath, {
+												force: true
+											},
+											() => {
+												uni.showModal({
+													title: '安装成功是否重启',
+													success: (res) => {
+														if (res.confirm) {
+															plus.runtime.restart()
+														}
+													}
+												})
+											}, (err) => {
+												uni.showModal({
+													title: '更新失败',
+													content: err.message,
+													showCancel: false
+												})
+											})
+									}
+								})
+							}
+						})
+					})
+					.catch(err => {
+						console.log(err)
+					})
+			}
 		}
 	}
 </script>
@@ -225,8 +289,6 @@
 					margin-top: 2vh;
 					width: 80%;
 					height: 150rpx;
-					line-height: 150rpx;
-					text-align: center;
 				}
 			}
 

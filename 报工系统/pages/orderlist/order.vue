@@ -5,7 +5,7 @@
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
 		<!-- 确认结束环节弹窗 -->
 		<info-sure-modal :showLink.sync="showLink" :rowData="rowData" :orderId="orderDetail.order_id"
-			:configTableId="config_table_id" :title="linkTitle" />
+			:configTableId="tableInfoLink.config_table_id_main" :title="linkTitle" />
 		<!-- 设置框 -->
 		<view class="dialog-slot-card flex align-center justify-center" v-if="showSetting" @click="showSetting=false">
 			<view class="setting-div flex align-center justify-center" @click.stop="onEgg">
@@ -23,10 +23,12 @@
 		<!-- 刷卡框 -->
 		<view class="dialog-slot-card flex align-center justify-center" v-if="showShiGongDH">
 			<view class="card-div">
-				<view class="card-num flex align-center justify-between">
+				<!-- <view class="card-num flex align-center justify-between">
 					<text>{{shigongDH2==''?'施工单号':shigongDH2}}</text>
 					<image @click="toScan" src="../../static/image/scan.png" alt=""></image>
-				</view>
+				</view> -->
+				<input type="number" :focus="getFocus" v-model="shigongDH2" placeholder-class="place-class"
+					placeholder="施工单号">
 				<view class="detail">
 					<view class="jsq flex justify-end">
 						<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('1')">1</view>
@@ -120,9 +122,11 @@
 						<view class="edit-btn flex align-center justify-center">
 							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
 								:class="inputIndex == -1?'checkOut':''">
-								<view class="">
+								<!-- <view class="">
 									{{emploId == ""?'员工卡号':emploId}}
-								</view>
+								</view> -->
+								<input type="number" v-model="emploId" :focus="inputIndex == -1" placeholder="员工卡号"
+									placeholder-class="place-class">
 								<image class="input-close" @tap.stop="onDelInput"
 									src="../../static/image/input-close.png">
 								</image>
@@ -306,6 +310,7 @@
 				showSetting: false,
 				showShiGongDH: true,
 				shigongDH2: '',
+				getFocus: true,
 
 				orderDetail: {
 					orderTitle: '',
@@ -316,9 +321,12 @@
 					order_id: '',
 				},
 
+				tableInfoBe: {}, //报工表B表
+				tableInfoMain: {}, //计划表A表
+				tableInfoLink: {}, //关联表（有a表和b表）
+
 				stepsIndex: -1,
 				stepsList: [],
-				config_table_id: '',
 				tb_auto_id: '',
 
 				showList: true,
@@ -348,11 +356,9 @@
 				inputIndex: -1,
 				showOrderDetail: false,
 				emploId: '',
-				getFocus: true,
 				Value: [],
 
-				timer: null,
-				timer2: null,
+				timer2: null, //右上角时间循环器
 			}
 		},
 		onLoad() {
@@ -408,6 +414,7 @@
 			},
 			// 选择报工步骤
 			onShowDetail(item, index) {
+				this.tableInfoLink = item;
 				if (this.orderDetail.order_id == '') {
 					return uni.showToast({
 						title: '请输入有效施工单号',
@@ -415,9 +422,7 @@
 						duration: 2000
 					})
 				}
-				this.stepsDetail = item
 				this.stepsIndex = index
-				this.config_table_id = item.config_table_id
 				// 获取需要报工的单据
 				this.$api({
 					url: '/api/data.php',
@@ -427,7 +432,7 @@
 						need_type: 'getMobTableList',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						config_table_id: this.config_table_id,
+						config_table_id: this.tableInfoLink.config_table_id_main,
 						order_id: this.orderDetail.order_id,
 						isSopRequest: '1'
 					}
@@ -585,10 +590,11 @@
 			},
 			// 选中右侧订单
 			onEditOrder(item, index) {
+				console.log('关联表', this.tableInfoLink);
+				// return;
 				this.orderIndex = index
 				this.showOrderDetail = true
 				this.dataDetailAllList.order_index = item.order_index
-				this.tb_auto_id = item.tb_auto_id
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -597,12 +603,12 @@
 						need_type: 'getTableDataInfoFun',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						config_table_id: this.config_table_id,
+						config_table_id: this.tableInfoLink.config_table_id_be,
 						order_id: this.orderDetail.order_id,
-						src_tb_auto_id: this.tb_auto_id,
-						src_config_table_id: this.config_table_id,
+						src_tb_auto_id: item.tb_auto_id,
+						src_config_table_id: item.config_table_id,
 						table_about_job: 'report',
-						tb_auto_id: this.tb_auto_id,
+						tb_auto_id: '0',
 						isSopRequest: '1'
 					}
 				}).then(res => {
@@ -689,18 +695,16 @@
 						need_type: 'mobSetTableDataInfoFun',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						tb_auto_id: 0,
-						// tb_auto_id: this.tb_auto_id,
-						set_from_config_table_id: this.config_table_id,
+						tb_auto_id: '0',
+						set_from_config_table_id: this.tableInfoLink.config_table_id_main,
 						set_from_tb_auto_id: this.tb_auto_id,
 						order_id: this.orderDetail.order_id,
-						config_table_id: this.config_table_id,
+						config_table_id: this.tableInfoLink.config_table_id_main,
 						data_list: dataList,
 						finger_print: this.emploId,
 						isSopRequest: '1'
 					}
 				}).then(res => {
-					console.log(res)
 					uni.showToast({
 						title: '报工成功',
 						icon: 'success',
@@ -844,7 +848,8 @@
 				border-radius: 10rpx;
 				padding: 3vh;
 
-				.card-num {
+				.card-num,
+				input {
 					width: 95%;
 					height: 4vh;
 					background: #081E39;
@@ -859,6 +864,12 @@
 						width: 2vw;
 						height: 2vw;
 					}
+				}
+
+				.place-class {
+					font-size: 1.5vw;
+					font-weight: 500;
+					color: #9CC8ED;
 				}
 
 				.detail {
@@ -1089,6 +1100,16 @@
 								border-top-left-radius: 0.5vh;
 								border-bottom-left-radius: 0.5vh;
 								box-sizing: border-box;
+
+								input {
+									width: 60%;
+								}
+
+								.place-class {
+									font-size: 1.5vw;
+									font-weight: 500;
+									color: #9CC8ED;
+								}
 							}
 
 							.checkOut {
@@ -1098,7 +1119,6 @@
 							.input-close {
 								width: 2.5vw;
 								height: 2.5vw;
-								margin-left: 3vw;
 							}
 
 							.submit-btn {

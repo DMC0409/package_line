@@ -78,7 +78,11 @@
 						isSopRequest: '1'
 					}
 				}).then(res => {
-					console.log(res)
+					uni.showToast({
+						icon: 'success',
+						title: '确认成功',
+						duration: 2000
+					})
 				}, () => {}).catch(err => {
 					console.log(err)
 				})
