@@ -80,12 +80,10 @@
 									<view class="type-btn flex align-center justify-start"
 										v-if="item.head_input_set == '30' || item.head_input_set == '31'">
 										<picker class="type-item" mode="date" :value="item.this_str"
+											:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined"
 											start="2020-01-01 00:00:00" end="2030-01-01 00:00:00">
 											<view>{{item.this_str}}</view>
 										</picker>
-										<!-- <view class="type-item" v-for="(val,ind) in item.head_input_setjson" :key="ind"
-											:class="item.head_input_value === ind?'type-item-selected':''"
-											@click="onClickOrderIndex(index,ind)">{{val.name}}</view> -->
 									</view>
 									<view class="type-btn flex align-center justify-start"
 										v-else-if="item.head_input_set == '20' || item.head_input_set == '21'">
@@ -225,10 +223,10 @@
 					</block>
 				</view>
 
-				<view class="list-footer flex align-center justify-between">
-					<view class="list-btn" @click="onSureLink" style="background-color:green;">
+				<view class="list-footer flex align-center justify-end">
+					<!-- <view class="list-btn" @click="onSureLink" style="background-color:green;">
 						确认环节
-					</view>
+					</view> -->
 					<view class="footer-right-btn"
 						style=" display: flex;align-items:center;width:65%;justify-content: flex-end;">
 						<view class="list-btn" @click="onPageListCit('pre')">上一页</view>
@@ -348,7 +346,7 @@
 
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '230304014',
+				shigongDH2: '',
 				getFocus: true,
 
 				orderDetail: {
@@ -456,7 +454,7 @@
 				this.tableInfoLink = item;
 				if (this.orderDetail.order_id == '') {
 					return uni.showToast({
-						title: '请输入有效施工单号',
+						title: '施工单号无效',
 						icon: 'error',
 						duration: 2000
 					})
@@ -629,8 +627,6 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
-				console.log('关联表', item);
-				// return;
 				this.orderIndex = index
 				this.showOrderDetail = true
 				this.dataDetailAllList.order_index = item.order_index
@@ -653,17 +649,11 @@
 					}
 				}).then(res => {
 					this.dataDetailList = res.data.data.tableHeadList
-					console.log(this.dataDetailList)
 					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
 					this.dataDetailAllList.yieldInfo = res.data.data.yieldInfo
 				}).catch(err => {
 					console.log(err)
 				})
-			},
-			//左侧选择类型
-			onClickOrderIndex(index, ind) {
-				this.inputIndex = index + 1
-				this.$set(this.dataDetailList[index], 'head_input_value', ind)
 			},
 			//取消input调起键盘事件
 			onFocusValue(index) {

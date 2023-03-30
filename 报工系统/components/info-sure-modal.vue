@@ -154,8 +154,8 @@
 	}
 
 	.modal {
-		width: 30vw;
-		max-width: 30vw;
+		width: 40vw;
+		max-width: 40vw;
 		min-height: 42vh;
 		background-color: #FFFFFF;
 		border-radius: 10rpx;

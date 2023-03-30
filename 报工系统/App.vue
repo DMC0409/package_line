@@ -11,7 +11,7 @@
 		},
 		onLaunch: function() {
 			console.log('App Launch')
-			plus.screen.lockOrientation('landscape-primary'); //锁定
+			plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
 		},
 		onShow: function() {
 			console.log('App Show')
@@ -50,6 +50,11 @@
 							}
 						})
 						.catch(err => {
+							uni.showToast({
+								title: '请检查网络连接',
+								icon: 'error',
+								duration: 2000
+							})
 							console.log(err)
 						})
 				}

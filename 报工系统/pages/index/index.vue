@@ -76,9 +76,18 @@
 			// 已登陆过的用户退出系统后将持久化的mySysId回显
 			if (uni.getStorageSync('mySysId')) {
 				this.formList[0].value = uni.getStorageSync('mySysId')
+				// 检查版本信息
+				this.checkVersion()
 			}
-			// 检查版本信息
-			this.checkVersion()
+		},
+		watch: {
+			// 若输入完成系统编号则进行版本查验
+			currentIndex(newVal, oldVal) {
+				if (oldVal == 0) {
+					// 检查版本信息
+					this.checkVersion()
+				}
+			}
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI']),
@@ -184,18 +193,18 @@
 						data: {
 							api_class: 'Open_sopEquipmentClass',
 							need_type: 'getSopVersionFun',
-							mySysId: uni.getStorageSync('mySysId'),
+							mySysId: this.formList[0].value,
 							isSopRequest: "1"
 						}
 					}).then(res => {
 						plus.runtime.getProperty(plus.runtime.appid, (appData) => {
+							console.log(appData)
 							// 版本不同则进行下载
 							let url = res.data.data.downloadLink
 							if (res.data.data.versionNum != appData.version) {
 								uni.downloadFile({
 									url,
 									success: (res) => {
-										console.log(res)
 										if (res.statusCode != 200) {
 											return uni.showToast({
 												title: '下载安装包失败',
@@ -228,6 +237,11 @@
 						})
 					})
 					.catch(err => {
+						uni.showToast({
+							icon: 'error',
+							title: err.errMsg,
+							duration: 2000
+						})
 						console.log(err)
 					})
 			}
