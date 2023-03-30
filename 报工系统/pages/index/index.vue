@@ -48,21 +48,14 @@
 	export default {
 		data() {
 			return {
-				showModalData: false,
-				dataInfo: '',
-				dataType: '',
 				// 编辑中的输入框
 				currentIndex: 0,
+				// 表单结构数据
 				formList: [{
 						label: '系统编号',
 						value: '',
 						focus: false,
 					},
-					// {
-					// 	label: 'API 地址',
-					// 	value: 'https://my.easy-deer.com/Api2/data.php',
-					// 	focus: false,
-					// },
 					{
 						label: 'SOP账户',
 						value: '',
@@ -72,25 +65,24 @@
 						value: '',
 						focus: false,
 					},
-					// {
-					// 	label: '设备编号',
-					// 	value: '',
-					// 	focus: false,
-					// }
 				],
+				// 按钮状态
 				loading: false,
-				equipmentInfo: {},
+				// 记录迷你键盘当前输入的信息
 				currentValue: []
 			}
 		},
 		onLoad() {
+			// 已登陆过的用户退出系统后将持久化的mySysId回显
 			if (uni.getStorageSync('mySysId')) {
 				this.formList[0].value = uni.getStorageSync('mySysId')
 			}
+			// 检查版本信息
 			this.checkVersion()
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI']),
+			// 迷你数字键盘
 			onClickDH(num) {
 				if (num == 'del') {
 					let nowValue = this.formList[this.currentIndex].value.substring(0, this.formList[this.currentIndex]
@@ -114,6 +106,7 @@
 				}
 			},
 			handleLogin() {
+				// 防止用户重复点击登陆按钮
 				if (this.loading) {
 					return
 				}
@@ -127,6 +120,7 @@
 					}
 				}
 				this.loading = true;
+				// 检测网络是否连通
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -137,7 +131,9 @@
 						isSopRequest: "1"
 					}
 				}).then(res => {
+					// 修改网络状态为在线
 					this.UPDATE_WIFI(true)
+					// EPC登陆
 					this.$api({
 						url: '/api/data.php',
 						method: 'post',
@@ -156,6 +152,7 @@
 							title: '登陆成功',
 							duration: 2000
 						})
+						// 登陆凭证持久化
 						uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
 						uni.setStorageSync('mySysId', this.formList[0].value)
 						uni.reLaunch({
@@ -167,7 +164,9 @@
 						this.loading = false;
 					})
 				}, () => {
+					// 修改网络状态为离线
 					this.UPDATE_WIFI(false)
+					// 关闭按钮loading状态
 					this.loading = false;
 					uni.showToast({
 						title: '请检查网络连接',

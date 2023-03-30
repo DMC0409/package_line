@@ -76,24 +76,58 @@
 							<block v-for="(item,index) in dataDetailList" :key="index">
 								<view class="left-item flex align-center"
 									v-if="item.head_style == '0' && item.comm_set_json.show_job_submission!=undefined">
-									{{item.head_name ||''}}：
-									<view v-if="item.head_input_set == 30 || item.head_input_set ==31"
-										class="type-btn flex align-center justify-start">
-										<view v-for="(val,ind) in item.head_input_setjson" :key="ind"
-											:class="item.head_input_value === ind?'type-item type-item-selected':'type-item'"
-											@click="onClickOrderIndex(index,ind)">{{val.name}}</view>
+									{{item.head_name}}：
+									<view class="type-btn flex align-center justify-start"
+										v-if="item.head_input_set == '30' || item.head_input_set == '31'">
+										<picker class="type-item" mode="date" :value="item.this_str"
+											start="2020-01-01 00:00:00" end="2030-01-01 00:00:00">
+											<view>{{item.this_str}}</view>
+										</picker>
+										<!-- <view class="type-item" v-for="(val,ind) in item.head_input_setjson" :key="ind"
+											:class="item.head_input_value === ind?'type-item-selected':''"
+											@click="onClickOrderIndex(index,ind)">{{val.name}}</view> -->
 									</view>
-									<view v-else-if="item.head_input_set == 20 || item.head_input_set ==21"
-										class="type-btn flex align-center justify-start">
-										<view>{{item.this_str}}</view>
+									<view class="type-btn flex align-center justify-start"
+										v-else-if="item.head_input_set == '20' || item.head_input_set == '21'">
+										<view class="type-item" :class="inputIndex==index ?'input-selected':''"
+											@click="onFocusValue(index)">{{item.this_str}}</view>
 									</view>
-									<view v-else-if="item.head_input_save ==1 || item.head_input_save ==2"
-										class="eachInput" :class="inputIndex==index ?'input-selected':''"
-										@click="onFocusValue(index)">
-										{{item.this_value}}
+									<view class="type-btn flex align-center justify-start"
+										v-else-if="item.head_input_set == '1' || item.head_input_set == '2'">
+										<view class="type-item" :class="inputIndex==index ?'input-selected':''"
+											v-if="item.head_input_save == '1' || item.head_input_save == '2'"
+											@click="onFocusValue(index)">
+											{{item.this_value}}
+										</view>
+										<view class="type-item" v-else>
+											<input type="text" v-model="item.this_value"
+												:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined">
+										</view>
 									</view>
-									<view v-else>
-										{{item.this_str}}
+									<view class="type-btn flex align-center justify-start" v-else>
+										<view class="type-item">
+											{{item.this_str}}
+										</view>
+									</view>
+								</view>
+								<view class="left-item flex align-center"
+									v-else-if="item.head_style=='17' && item.comm_set_json.show_job_submission!=undefined">
+									{{item.head_name}}：
+									<view class="type-btn flex align-center justify-start" @click="getEquimp(index)">
+										<picker class="type-item" mode="selector" :range="equimpArr" :value="index"
+											range-key="equipment_name" @change="bindPickerEquip($event,index)">
+											<view v-if="equimpArr[index]">
+												{{equimpArr[Number(item.this_value)].equipment_name}}
+											</view>
+											<view v-else>{{item.this_str=='0'?'-':item.this_str}}</view>
+										</picker>
+									</view>
+								</view>
+								<view class="left-item flex align-center"
+									v-else-if="item.comm_set_json.show_job_submission!=undefined">
+									{{item.head_name}}：
+									<view class="type-btn flex align-center justify-start">
+										<view class="type-item">{{item.this_str}}</view>
 									</view>
 								</view>
 							</block>
@@ -236,7 +270,7 @@
 							</view>
 							<view class="steps-item-line"></view>
 							<view :class="index==stepsIndex ?'btn steps-btn steps-btn-selected':'btn steps-btn'">
-								{{item.table_name}}
+								{{item.table_name_be}}
 							</view>
 						</view>
 					</view>
@@ -314,7 +348,7 @@
 
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '',
+				shigongDH2: '230304014',
 				getFocus: true,
 
 				orderDetail: {
@@ -332,7 +366,6 @@
 
 				stepsIndex: -1,
 				stepsList: [],
-				tb_auto_id: '',
 
 				showList: true,
 				showSGD: false,
@@ -362,6 +395,7 @@
 				showOrderDetail: false,
 				emploId: '',
 				Value: [],
+				equimpArr: [],
 
 				timer2: null, //右上角时间循环器
 			}
@@ -593,13 +627,14 @@
 					this.showShiGongDH = false
 				}
 			},
-			// 选中右侧订单
+			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
-				console.log('关联表', this.tableInfoLink);
+				console.log('关联表', item);
 				// return;
 				this.orderIndex = index
 				this.showOrderDetail = true
 				this.dataDetailAllList.order_index = item.order_index
+				this.dataDetailAllList.tb_auto_id = item.tb_auto_id
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -632,10 +667,40 @@
 			},
 			//取消input调起键盘事件
 			onFocusValue(index) {
+				//报工时候set_job_submission，编辑时isedit
+				if (this.dataDetailList[index].comm_set_json['set_job_submission'] != undefined || this.dataDetailList[
+						index].comm_set_json[
+						'isedit'] != undefined) {
+					return;
+				}
 				// uni.hideKeyboard();
 				this.Value = []
 				this.inputIndex = index || 0
-				this.$set(this.dataDetailList[index], 'head_input_value', this.dataDetailList[index].head_input_value)
+			},
+			// 获取设备列表
+			getEquimp(index) {
+				this.inputIndex = index || 0
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'getEquipmentList',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						ass_equipment_type_id: this.dataDetailList[index].comm_set_json.select_accurate_type_id,
+						isSopRequest: '1'
+					}
+				}).then(res => {
+					this.equimpArr = res.data.data.equipmentList.list.dataList
+				}).catch(err => {
+					console.log(err)
+				})
+			},
+			// 修改选中设备值
+			bindPickerEquip(e, index) {
+				this.$set(this.dataDetailList[this.inputIndex], 'this_value', e.detail.value)
+				this.$set(this.dataDetailList[this.inputIndex], 'this_str', this.equimpArr[e.detail.value].equipment_name)
 			},
 			//键盘
 			onClickNum(num) {
@@ -658,17 +723,21 @@
 				if (this.inputIndex == -1) {
 					this.emploId = headValue
 				} else {
-					this.$set(this.dataDetailList[this.inputIndex], 'head_input_value', headValue)
+					this.$set(this.dataDetailList[this.inputIndex], 'this_value', headValue)
+					this.$set(this.dataDetailList[this.inputIndex], 'this_str', headValue)
 				}
 			},
+			// 编辑员工卡号
 			toEditCard() {
 				this.inputIndex = -1
 				this.Value = this.emploId.split('')
 			},
+			// 清空员工卡号
 			onDelInput() {
 				this.emploId = '';
 				this.Value = []
 			},
+			// 提交报工信息
 			onSureEdit() {
 				if (this.emploId == '') {
 					return uni.showToast({
@@ -678,16 +747,36 @@
 					})
 				}
 				let dataList = []
-				this.dataDetailList.map(item => {
-					if (item.head_input_value) {
-						dataList.push({
-							name: item.config_table_head_id,
-							value: item.head_input_value.toString(),
-							str: item.head_input_setjson.length == 0 ? item.head_input_value : item
-								.head_input_setjson[item.head_input_value].label
+				for (let item of this.dataDetailList) {
+					// 判断是否列入传参列表中
+					if (item.comm_set_json['set_job_submission_src_head_id'] ==
+						undefined && (item.comm_set_json['set_job_submission'] !=
+							undefined || item.comm_set_json['isedit'] != undefined)) {
+						// 停止循环执行下一个循环
+						continue;
+					}
+					// 对列表数据进行非空判断
+					if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' && (
+							item
+							.this_value == 0 || item.this_value == '')) {
+						return uni.showModal({
+							title: item.head_name + '未输入',
+							success: (res) => {
+								if (res.confirm) {
+									console.log('用户点击确定')
+								} else if (res.cancel) {
+									console.log('用户点击取消')
+								}
+							}
 						})
 					}
-				})
+					// 构建需要提交的表单数据
+					dataList.push({
+						name: item.config_table_head_id,
+						value: item.this_value,
+						str: item.this_str
+					})
+				}
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -698,9 +787,9 @@
 						loginsession_sop: uni.getStorageSync('loginsession'),
 						tb_auto_id: '0',
 						set_from_config_table_id: this.tableInfoLink.config_table_id_main,
-						set_from_tb_auto_id: this.tb_auto_id,
+						set_from_tb_auto_id: this.dataDetailAllList.tb_auto_id,
 						order_id: this.orderDetail.order_id,
-						config_table_id: this.tableInfoLink.config_table_id_main,
+						config_table_id: this.tableInfoLink.config_table_id_be,
 						data_list: dataList,
 						finger_print: this.emploId,
 						isSopRequest: '1'
@@ -1021,15 +1110,21 @@
 
 							.input-selected {
 								border: 1rpx solid #00FFFF;
+								box-sizing: border-box;
 							}
 
 							.type-btn {
 								width: 70%;
 								flex-wrap: wrap;
 
+								input {
+									font-size: 1.5vw;
+								}
+
 								.type-item {
+									width: 80%;
 									margin: 10rpx;
-									padding: 5rpx 12rpx;
+									padding: 10rpx 12rpx;
 									background: #061830;
 									border-radius: 5rpx;
 									font-size: 1.5vw;
