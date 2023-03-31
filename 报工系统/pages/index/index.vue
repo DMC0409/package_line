@@ -1,6 +1,8 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
+		<!-- 遮罩层 -->
+		<view class="mark" v-if="vuex_Requeset"></view>
 		<image class="logo" src="../../static/image/logo.png"></image>
 		<view class="content flex image-back-norepeat align-center justify-between"
 			style="background-image: url(../../static/image/index-border.png);">
@@ -10,8 +12,7 @@
 					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
 						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
 				</view>
-				<button class="btn flex align-center justify-center" :loading="loading"
-					@click="handleLogin">开始使用</button>
+				<button class="btn flex align-center justify-center" @click="handleLogin">开始使用</button>
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
@@ -43,6 +44,7 @@
 
 <script>
 	import {
+		mapState,
 		mapMutations
 	} from 'vuex'
 	export default {
@@ -66,8 +68,6 @@
 						focus: false,
 					},
 				],
-				// 按钮状态
-				loading: false,
 				// 记录迷你键盘当前输入的信息
 				currentValue: []
 			}
@@ -88,6 +88,9 @@
 					this.checkVersion()
 				}
 			}
+		},
+		computed: {
+			...mapState(['vuex_Requeset'])
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI']),
@@ -115,10 +118,6 @@
 				}
 			},
 			handleLogin() {
-				// 防止用户重复点击登陆按钮
-				if (this.loading) {
-					return
-				}
 				for (let i of this.formList) {
 					if (i.value == '') {
 						return uni.showToast({
@@ -128,7 +127,6 @@
 						})
 					}
 				}
-				this.loading = true;
 				// 检测网络是否连通
 				this.$api({
 					url: '/api/data.php',
@@ -155,7 +153,6 @@
 							isSopRequest: "1"
 						}
 					}).then((res) => {
-						this.loading = false;
 						uni.showToast({
 							icon: 'success',
 							title: '登陆成功',
@@ -164,27 +161,15 @@
 						// 登陆凭证持久化
 						uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
 						uni.setStorageSync('mySysId', this.formList[0].value)
+						// 跳转至报单页面
 						uni.reLaunch({
 							url: '../orderlist/order'
 						})
-					}, () => {
-						this.loading = false;
-					}).catch(() => {
-						this.loading = false;
-					})
+					}, () => {}).catch(() => {})
 				}, () => {
 					// 修改网络状态为离线
 					this.UPDATE_WIFI(false)
-					// 关闭按钮loading状态
-					this.loading = false;
-					uni.showToast({
-						title: '请检查网络连接',
-						icon: 'error',
-						duration: 2000
-					})
-				}).catch(() => {
-					this.loading = false;
-				})
+				}).catch(() => {})
 			},
 			checkVersion() {
 				this.$api({
@@ -199,9 +184,10 @@
 					}).then(res => {
 						plus.runtime.getProperty(plus.runtime.appid, (appData) => {
 							console.log(appData)
-							// 版本不同则进行下载
+							// 版本不同则进行更新
 							let url = res.data.data.downloadLink
 							if (res.data.data.versionNum != appData.version) {
+								// 下载更新文件
 								uni.downloadFile({
 									url,
 									success: (res) => {
@@ -212,12 +198,13 @@
 												duration: 2000
 											})
 										}
+										// 安装更新文件
 										plus.runtime.install(res.tempFilePath, {
 												force: true
 											},
 											() => {
 												uni.showModal({
-													title: '安装成功是否重启',
+													title: '程序已更新是否重启',
 													success: (res) => {
 														if (res.confirm) {
 															plus.runtime.restart()
@@ -237,11 +224,6 @@
 						})
 					})
 					.catch(err => {
-						uni.showToast({
-							icon: 'error',
-							title: err.errMsg,
-							duration: 2000
-						})
 						console.log(err)
 					})
 			}
@@ -253,6 +235,15 @@
 	.container {
 		height: 100vh;
 		flex-direction: column;
+		position: relative;
+
+		.mark {
+			position: absolute;
+			width: 100vw;
+			height: 100vh;
+			background: rgba(0, 0, 0, .5);
+			z-index: 999;
+		}
 
 		.logo {
 			width: 10vw;

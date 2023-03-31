@@ -1,6 +1,8 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
+		<!-- 遮罩层 -->
+		<view class="mark" v-if="vuex_Requeset"></view>
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
 		<!-- 确认结束环节弹窗 -->
@@ -28,7 +30,7 @@
 					<image @click="toScan" src="../../static/image/scan.png" alt=""></image>
 				</view> -->
 				<input type="number" :focus="getFocus" v-model="shigongDH2" placeholder-class="place-class"
-					placeholder="施工单号">
+					@confirm="onInputSure" placeholder="施工单号">
 				<view class="detail">
 					<view class="jsq flex justify-end">
 						<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('1')">1</view>
@@ -112,13 +114,17 @@
 									v-else-if="item.head_style=='17' && item.comm_set_json.show_job_submission!=undefined">
 									{{item.head_name}}：
 									<view class="type-btn flex align-center justify-start" @click="getEquimp(index)">
-										<picker class="type-item" mode="selector" :range="equimpArr" :value="index"
+										<image class="triangle" src="../../static/image/triangle-up.png"></image>
+										<view class="equipmOut">
+											
+										</view>
+										<!-- <picker class="type-item" mode="selector" :range="equimpArr" :value="index"
 											range-key="equipment_name" @change="bindPickerEquip($event,index)">
 											<view v-if="equimpArr[index]">
 												{{equimpArr[Number(item.this_value)].equipment_name}}
 											</view>
 											<view v-else>{{item.this_str=='0'?'-':item.this_str}}</view>
-										</picker>
+										</picker> -->
 									</view>
 								</view>
 								<view class="left-item flex align-center"
@@ -159,11 +165,8 @@
 						<view class="edit-btn flex align-center justify-center">
 							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
 								:class="inputIndex == -1?'checkOut':''">
-								<!-- <view class="">
-									{{emploId == ""?'员工卡号':emploId}}
-								</view> -->
-								<input type="number" v-model="emploId" :focus="inputIndex == -1" placeholder="员工卡号"
-									placeholder-class="place-class">
+								<input type="number" v-model="emploId" @confirm="onSureEdit" :focus="inputIndex == -1"
+									placeholder="员工卡号" placeholder-class="place-class">
 								<image class="input-close" @tap.stop="onDelInput"
 									src="../../static/image/input-close.png">
 								</image>
@@ -261,14 +264,16 @@
 				<view class="detail-bottom image-back-norepeat flex justify-center align-center"
 					style="background-image: url(../../static/image/bottom-back.png);">
 					<view class="steps-all flex justify-between">
-						<view class="btm-steps flex align-center" @click="onShowDetail(item,index)"
+						<view class="btm-steps flex align-center justify-center" @click="onShowDetail(item,index)"
 							v-for="(item,index) in stepsList" :key="index">
-							<view :class="index==stepsIndex ?'steps-item steps-item-selected':'steps-item'">
+							<!-- <view :class="index==stepsIndex ?'steps-item steps-item-selected':'steps-item'">
 								{{index+1}}
 							</view>
-							<view class="steps-item-line"></view>
-							<view :class="index==stepsIndex ?'btn steps-btn steps-btn-selected':'btn steps-btn'">
-								{{item.table_name_be}}
+							<view class="steps-item-line"></view> -->
+							<view class="btn steps-btn flex align-center justify-between"
+								:class="index==stepsIndex ?'steps-btn-selected':''">
+								<view class="step-name">{{item.table_name_be}}</view>
+								<view class="step-record flex align-center justify-center">记录</view>
 							</view>
 						</view>
 					</view>
@@ -311,16 +316,6 @@
 					v-if="(showSGD&&!shiGongDImg)||(!showSGD&&tuGaoImgList.length<=0) ">
 					暂无图片
 				</view>
-				<!-- <view class="right-head flex align-center justify-around" v-if="showList">
-					<view class="add-btn flex align-center justify-center"
-						@click="onGetRowDetail(tableRowData,currentIndex,0)">
-						立即报工
-					</view>
-					<view class="add-btn flex align-center justify-center" @click="onSureLink"
-						style="background-color:green;">
-						确认环节
-					</view>
-				</view> -->
 			</view>
 		</view>
 	</view>
@@ -339,10 +334,10 @@
 		},
 		data() {
 			return {
-				appVersion: '',
-				time: '',
-				date: '',
-				week: '',
+				appVersion: '', // 系统版本信息
+				time: '', // 当前时间
+				date: '', // 当前日期
+				week: '', //当前星期
 
 				showSetting: false,
 				showShiGongDH: true,
@@ -358,21 +353,18 @@
 					order_id: '',
 				},
 
-				tableInfoBe: {}, //报工表B表
-				tableInfoMain: {}, //计划表A表
 				tableInfoLink: {}, //关联表（有a表和b表）
 
-				stepsIndex: -1,
-				stepsList: [],
+				stepsIndex: -1, //报工步骤选中下标
+				stepsList: [], // 报工步骤列表
 
-				showList: true,
 				showSGD: false,
 				shiGongDImg: '', //施工单图片
-				tuGaoImgList: [],
+				tuGaoImgList: [], // 图稿列表
 				imgs: [], //预览图片
 
 				showOrderList: false,
-				totalRow: 0,
+				totalRow: 0, // 需要报工的单据条数
 				dataList: [],
 				orderIndex: -1,
 				orderPageIndex: 1, //右侧弹框分页
@@ -391,17 +383,17 @@
 				dataDetailList: [],
 				inputIndex: -1,
 				showOrderDetail: false,
-				emploId: '',
+				emploId: '', // 报工员工卡号
 				Value: [],
-				equimpArr: [],
+				equimpArr: [], // 报工设备选择列表
 
-				timer2: null, //右上角时间循环器
+				timer: null, //右上角时间循环器
 			}
 		},
 		onLoad() {
-			this.topRightData()
-			this.timer2 = setInterval(() => {
-				this.topRightData()
+			this.getNowDate()
+			this.timer = setInterval(() => {
+				this.getNowDate()
 			}, 1000);
 			// #ifdef APP-PLUS
 			plus.runtime.getProperty(plus.runtime.appid, (wgtinfo) => {
@@ -411,16 +403,16 @@
 			this.getPackTable()
 		},
 		computed: {
-			...mapState(['vuex_Wifi'])
+			...mapState(['vuex_Wifi', 'vuex_Requeset'])
 		},
 		methods: {
 			// 获取当前时间和日期
-			topRightData() {
+			getNowDate() {
 				this.time = this.$moment().format('HH:mm:ss')
 				this.date = this.$moment().format('YYYY-MM-DD')
 				this.week = this.$moment().format('dddd')
 			},
-			// 判断wifi状态
+			// 前往系统wifi设置页面
 			onSetWifi() {
 				// #ifdef APP-PLUS
 				var main = plus.android.runtimeMainActivity(); //获取activity  
@@ -452,14 +444,12 @@
 			// 选择报工步骤
 			onShowDetail(item, index) {
 				this.tableInfoLink = item;
-				if (this.orderDetail.order_id == '') {
-					return uni.showToast({
-						title: '施工单号无效',
-						icon: 'error',
-						duration: 2000
-					})
-				}
+				// 设置报工步骤选中的下标
 				this.stepsIndex = index
+				// 未填写施工单号则无订单编号（order_id），因此打开输入施工单号弹窗
+				if (this.orderDetail.order_id == '') {
+					return this.showShiGongDH = true
+				}
 				// 获取需要报工的单据
 				this.$api({
 					url: '/api/data.php',
@@ -585,6 +575,13 @@
 			},
 			// 打开施工单号输入框
 			onSetReCode() {
+				// 清空施工单号
+				this.shigongDH2 = ''
+				// 重置报工步骤选中下标
+				this.stepsIndex = -1
+				// 清空
+				this.orderDetail.order_id = ''
+				// 显示输入施工单号弹窗
 				this.showShiGongDH = true
 			},
 			// 确认/取消施工单号输入框
@@ -617,6 +614,9 @@
 						this.shiGongDImg = orderInfo.order_img || ''
 						this.tuGaoImgList = orderFilesList
 						this.showShiGongDH = false
+						if (this.stepsIndex != -1) {
+							this.onShowDetail(this.stepsList[this.stepsIndex], this.stepsIndex)
+						}
 					}).catch(err => {
 						console.log(err)
 					})
@@ -627,6 +627,8 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
+				// 清空员工卡号
+				this.onDelInput()
 				this.orderIndex = index
 				this.showOrderDetail = true
 				this.dataDetailAllList.order_index = item.order_index
@@ -882,7 +884,7 @@
 			onEgg() {}
 		},
 		onUnload() {
-			clearInterval(this.timer2)
+			clearInterval(this.timer)
 		}
 	}
 </script>
@@ -893,6 +895,15 @@
 		height: 100vh;
 		// padding-top: 5vh;
 		flex-direction: column;
+		position: relative;
+
+		.mark {
+			position: absolute;
+			width: 100vw;
+			height: 100vh;
+			background: rgba(0, 0, 0, .5);
+			z-index: 999;
+		}
 
 		.data-none {
 			color: #A6C4E6;
@@ -1106,6 +1117,20 @@
 							.type-btn {
 								width: 70%;
 								flex-wrap: wrap;
+								position: relative;
+								.equipmOut{
+									position: absolute;
+									top: 0;
+									width: 100%;
+									background: #fff;
+								}
+								.triangle{
+									position: absolute;
+									top: -10rpx;
+									left: 30%;
+									width: 1vw;
+									height: 1vw;
+								}
 
 								input {
 									font-size: 1.5vw;
@@ -1453,6 +1478,7 @@
 
 						.btm-steps {
 							width: 50%;
+							height: 10vh;
 
 							.steps-item {
 								width: 2vw;
@@ -1480,17 +1506,31 @@
 							}
 
 							.steps-btn {
-								font-size: 1.3vw;
-								width: 14vw;
-								padding: 1.3vh 1.5vw;
+								font-size: 2vw;
+								width: 80%;
+								height: 100%;
 								text-align: center;
 								background: rgba($color: #9FC4E1, $alpha: .4);
-								border-radius: 5rpx;
+								border-radius: 10rpx;
 								margin: 0;
 								color: #fff;
+
+								.step-name {
+									width: 70%;
+								}
+
+								.step-record {
+									width: 30%;
+									height: 100%;
+									color: #000;
+									border-top-right-radius: 10rpx;
+									border-bottom-right-radius: 10rpx;
+									background: #9FC4E1;
+								}
 							}
 
 							.steps-btn-selected {
+								box-sizing: border-box;
 								border: 1rpx solid #9FC4E1;
 								box-shadow: 2rpx 0 8rpx -1rpx #9FC4E1;
 							}

@@ -38,23 +38,12 @@
 								isSopRequest: "1"
 							}
 						}).then(res => {
-							if (res.data.sign == 1) {
-								this.UPDATE_WIFI(true)
-							} else {
-								this.UPDATE_WIFI(false)
-								uni.showToast({
-									title: '请检查网络连接',
-									icon: 'error',
-									duration: 2000
-								})
-							}
+							this.UPDATE_WIFI(true)
+						}, () => {
+							// 修改网络状态为离线
+							this.UPDATE_WIFI(false)
 						})
 						.catch(err => {
-							uni.showToast({
-								title: '请检查网络连接',
-								icon: 'error',
-								duration: 2000
-							})
 							console.log(err)
 						})
 				}
