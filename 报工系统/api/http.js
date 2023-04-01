@@ -7,12 +7,14 @@ export const myRequest = (options) => {
 	return new Promise((resolve, reject) => {
 		var sendData = options.data || {};
 		console.log('send data:', sendData)
-		//显示加载框
-		uni.showLoading({
-			title: '加载中'
-		});
-		// 显示遮罩层
-		store._mutations['UPDATE_REQUEST'][0](true)
+		if (options.data.need_type != 'checkNetOnLineFun') {
+			//显示加载框
+			uni.showLoading({
+				title: '加载中'
+			});
+			// 显示遮罩层
+			store._mutations['UPDATE_REQUEST'][0](true)
+		}
 		uni.request({
 			url: baseURL + options.url, //接口地址：前缀+方法中传入的地址
 			method: options.method || 'GET', //请求方法：传入的方法或者默认是“GET”

@@ -113,18 +113,18 @@
 								<view class="left-item flex align-center"
 									v-else-if="item.head_style=='17' && item.comm_set_json.show_job_submission!=undefined">
 									{{item.head_name}}：
-									<view class="type-btn flex align-center justify-start" @click="getEquimp(index)">
-										<image class="triangle" src="../../static/image/triangle-up.png"></image>
-										<view class="equipmOut">
-											
+									<view class="type-btn flex align-center justify-start">
+										<view class="type-item" @click="getEquimp(index)">
+											{{item.this_str?item.this_str:'-'}}
 										</view>
-										<!-- <picker class="type-item" mode="selector" :range="equimpArr" :value="index"
-											range-key="equipment_name" @change="bindPickerEquip($event,index)">
-											<view v-if="equimpArr[index]">
-												{{equimpArr[Number(item.this_value)].equipment_name}}
+										<image v-if="equimpArr.length!=0" class="triangle"
+											src="../../static/image/triangle-up.png">
+										</image>
+										<view class="equipmOut flex" v-if="equimpArr.length!=0">
+											<view class="eachEquip" @click.stop="bindPickerEquip(i,num)" v-for="(i,num) in equimpArr" :key="num">
+												{{i.equipment_name}}
 											</view>
-											<view v-else>{{item.this_str=='0'?'-':item.this_str}}</view>
-										</picker> -->
+										</view>
 									</view>
 								</view>
 								<view class="left-item flex align-center"
@@ -690,9 +690,12 @@
 				})
 			},
 			// 修改选中设备值
-			bindPickerEquip(e, index) {
-				this.$set(this.dataDetailList[this.inputIndex], 'this_value', e.detail.value)
-				this.$set(this.dataDetailList[this.inputIndex], 'this_str', this.equimpArr[e.detail.value].equipment_name)
+			bindPickerEquip(item, index) {
+				// console.log(item)
+				// console.log(index)
+				this.$set(this.dataDetailList[this.inputIndex], 'this_value', item.ass_equipment_id)
+				this.$set(this.dataDetailList[this.inputIndex], 'this_str', item.equipment_name)
+				this.equimpArr = []
 			},
 			//键盘
 			onClickNum(num) {
@@ -1118,16 +1121,32 @@
 								width: 70%;
 								flex-wrap: wrap;
 								position: relative;
-								.equipmOut{
+
+								.equipmOut {
 									position: absolute;
-									top: 0;
-									width: 100%;
+									top: 8vh;
+									width: 85%;
+									max-height: 30vh;
 									background: #fff;
+									flex-wrap: wrap;
+									z-index: 99;
+									border-radius: 10rpx;
+									overflow: auto;
+									.eachEquip{
+										background: #A4CEF4;
+										color: #5d5d5d;
+										// width: 44%;
+										text-align: center;
+										border-radius: 10rpx;
+										padding: 10rpx 20rpx;
+										margin: 15rpx;
+									}
 								}
-								.triangle{
+
+								.triangle {
 									position: absolute;
-									top: -10rpx;
-									left: 30%;
+									bottom: -1vh;
+									left: 40%;
 									width: 1vw;
 									height: 1vw;
 								}

@@ -16,24 +16,37 @@
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('1')">1</view>
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('2')">2</view>
-					<view class="jsq-item flex justify-center align-center border-right-none"
-						@tap.stop="onClickDH('3')">3</view>
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('4')">4</view>
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('5')">5</view>
-					<view class="jsq-item flex justify-center align-center border-right-none"
-						@tap.stop="onClickDH('6')">6</view>
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('7')">7</view>
-					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('8')">8</view>
-					<view class="jsq-item flex justify-center align-center border-right-none"
-						@tap.stop="onClickDH('9')">9</view>
-					<view class="jsq-item flex justify-center align-center border-bottom-none"
-						@tap.stop="onClickDH('0')">0</view>
-					<view class="jsq-item flex justify-center align-center border-bottom-none"
-						@tap.stop="onClickDH('clear')">清除</view>
-					<view class="jsq-item flex justify-center align-center border-right-none border-bottom-none"
-						@tap.stop="onClickDH('del')">
+					<view :class="{selected:selectedNum=='1'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('1')" @touchend.stop="resetSelect">1
+					</view>
+					<view :class="{selected:selectedNum=='2'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('2')" @touchend.stop="resetSelect">2</view>
+					<view :class="{selected:selectedNum=='3'}"
+						class="jsq-item flex justify-center align-center border-right-none"
+						@touchstart.stop="onClickDH('3')" @touchend.stop="resetSelect">3</view>
+					<view :class="{selected:selectedNum=='4'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('4')" @touchend.stop="resetSelect">4</view>
+					<view :class="{selected:selectedNum=='5'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('5')" @touchend.stop="resetSelect">5</view>
+					<view :class="{selected:selectedNum=='6'}"
+						class="jsq-item flex justify-center align-center border-right-none"
+						@touchstart.stop="onClickDH('6')" @touchend.stop="resetSelect">6</view>
+					<view :class="{selected:selectedNum=='7'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('7')" @touchend.stop="resetSelect">7</view>
+					<view :class="{selected:selectedNum=='8'}" class="jsq-item flex justify-center align-center"
+						@touchstart.stop="onClickDH('8')" @touchend.stop="resetSelect">8</view>
+					<view :class="{selected:selectedNum=='9'}"
+						class="jsq-item flex justify-center align-center border-right-none"
+						@touchstart.stop="onClickDH('9')" @touchend.stop="resetSelect">9</view>
+					<view :class="{selected:selectedNum=='0'}"
+						class="jsq-item flex justify-center align-center border-bottom-none"
+						@touchstart.stop="onClickDH('0')" @touchend.stop="resetSelect">0</view>
+					<view :class="{selected:selectedNum=='clear'}"
+						class="jsq-item flex justify-center align-center border-bottom-none"
+						@touchstart.stop="onClickDH('clear')" @touchend.stop="resetSelect">清除</view>
+					<view :class="{selected:selectedNum=='del'}"
+						class="jsq-item flex justify-center align-center border-right-none border-bottom-none"
+						@touchstart.stop="onClickDH('del')" @touchend.stop="resetSelect">
 						<image src="../../static/image/icon-jsq-close.png"></image>
 					</view>
 				</view>
@@ -69,7 +82,9 @@
 					},
 				],
 				// 记录迷你键盘当前输入的信息
-				currentValue: []
+				currentValue: [],
+				// 迷你键盘选中的按键
+				selectedNum: -1
 			}
 		},
 		onLoad() {
@@ -96,6 +111,7 @@
 			...mapMutations(['UPDATE_WIFI']),
 			// 迷你数字键盘
 			onClickDH(num) {
+				this.selectedNum = num
 				if (num == 'del') {
 					let nowValue = this.formList[this.currentIndex].value.substring(0, this.formList[this.currentIndex]
 						.value.length - 1)
@@ -116,6 +132,9 @@
 						})
 					}
 				}
+			},
+			resetSelect() {
+				this.selectedNum = -1
 			},
 			handleLogin() {
 				for (let i of this.formList) {
@@ -319,6 +338,10 @@
 						border-bottom: 1rpx solid #68686F;
 						border-right: 1rpx solid #68686F;
 						box-sizing: border-box;
+					}
+
+					.selected {
+						background: #00d4d4;
 					}
 
 					image {
