@@ -5,7 +5,7 @@
 			"name": "index"
 		},
 		{
-			"path": "pages/orderlist/order",
+			"path": "pages/login/login",
 			"name": "order"
 		}
 	],

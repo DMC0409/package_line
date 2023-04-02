@@ -15,6 +15,7 @@
 		},
 		onShow: function() {
 			console.log('App Show')
+			this.onCheckNet()
 			// 检查wifi
 			this.timer = setInterval(async () => {
 				await this.onCheckNet()
@@ -34,10 +35,10 @@
 							data: {
 								api_class: 'Open_sopEquipmentClass',
 								need_type: 'checkNetOnLineFun',
-								mySysId: uni.getStorageSync('mySysId'),
-								isSopRequest: "1"
+								mySysId: uni.getStorageSync('mySysId')
 							}
 						}).then(res => {
+							// 修改网络状态为在线
 							this.UPDATE_WIFI(true)
 						}, () => {
 							// 修改网络状态为离线

@@ -74,8 +74,7 @@
 						loginsession_sop: uni.getStorageSync('loginsession'),
 						config_table_id: this.configTableId,
 						order_id: this.orderId,
-						finger_print: this.link,
-						isSopRequest: '1'
+						finger_print: this.link
 					}
 				}).then(res => {
 					uni.showToast({
