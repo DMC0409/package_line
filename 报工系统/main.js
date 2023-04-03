@@ -11,7 +11,11 @@ import store from 'store/index.js'
 import {
 	myRequest,
 } from './api/http.js';
+// 引入工具
+import utils from './utils/index.js'
+
 Vue.prototype.$api = myRequest
+Vue.prototype.$utils = utils
 
 import moment from 'moment'; //导入模块
 moment.locale('zh-cn'); //设置语言 或 moment.lang('zh-cn'); 

@@ -3,6 +3,7 @@
 		style="background-image: url('../../static/image/page-back.png');">
 		<!-- 遮罩层 -->
 		<view class="mark" v-if="vuex_Requeset"></view>
+		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
 		<!-- 确认结束环节弹窗 -->
@@ -52,8 +53,13 @@
 							<image src="../../static/image/icon-jsq-close.png"></image>
 						</view>
 					</view>
-					<view class="edit-btn flex align-center justify-center" @click="onInputSure">
-						{{shigongDH2?'确认':'取消'}}
+					<view class="card-operate flex align-center justify-between">
+						<view class="edit-btn cancel flex align-center justify-center" @click="offInputSure">
+							取消
+						</view>
+						<view class="edit-btn flex align-center justify-center" @click="onInputSure">
+							确认
+						</view>
 					</view>
 				</view>
 			</view>
@@ -121,7 +127,7 @@
 											src="../../static/image/triangle-up.png">
 										</image>
 										<view class="equipmOut flex" v-if="equimpArr.length!=0">
-											<view class="eachEquip" @click.stop="bindPickerEquip(i,num)"
+											<view class="eachEquip" @click.stop="bindPickerEquip(i)"
 												v-for="(i,num) in equimpArr" :key="num">
 												{{i.equipment_name}}
 											</view>
@@ -188,8 +194,8 @@
 			<view class="setting flex align-center justify-end">
 				<view class="version">{{appVersion?'V'+appVersion:''}}</view>
 				<image src="../../static/image/icon-setting.png" @click="showSetting=true"></image>
-				<image v-if="vuex_Wifi" src="../../static/image/icon-wifi.png" @click="onSetWifi"></image>
-				<image v-else src="../../static/image/no-wifi.png" @click="onSetWifi"></image>
+				<image v-if="vuex_Wifi" src="../../static/image/icon-wifi.png" @click="settingWifi = true"></image>
+				<image v-else src="../../static/image/no-wifi.png" @click="settingWifi = true"></image>
 				<view class="time flex">
 					<text class="time-moment">{{time}}</text>
 					<text class="time-date">{{date}} {{week}}</text>
@@ -210,10 +216,11 @@
 					<block v-for="(item,index) in dataList" :key="index">
 						<view class="order-list-item flex align-center" :class="orderIndex == index?' item-selected':''"
 							@click.stop="onEditOrder(item,index)">
-							<view class="order-tags" v-if="item.bgTitle" :style="'background-color:'+item.bgColor+';'">
-								{{item.bgTitle}}
+							<view class="order-tags" v-if="item.mobsop_line_data_title"
+								:style="'background-color:'+item.mobsop_line_data_bgcolor+';'">
+								{{item.mobsop_line_data_title}}
 							</view>
-							<view :style="item.bgTitle?'':'margin-left:1vw;'">
+							<view :style="item.mobsop_line_data_title?'':'margin-left:1vw;'">
 								<view :class="orderIndex == index?'item-binahao':''">
 									{{item.order_index ? 'No.'+item.order_index:''}}
 								</view>
@@ -265,12 +272,14 @@
 				<view class="detail-bottom image-back-norepeat flex justify-center align-center"
 					style="background-image: url(../../static/image/bottom-back.png);">
 					<view class="steps-all flex justify-between">
-						<view class="btm-steps flex align-center justify-center" @click="onShowDetail(item,index)"
-							v-for="(item,index) in stepsList" :key="index">
+						<view class="btm-steps flex align-center justify-center" v-for="(item,index) in stepsList"
+							:key="index">
 							<view class="btn steps-btn flex align-center justify-between"
 								:class="index==stepsIndex ?'steps-btn-selected':''">
-								<view class="step-name">{{item.table_name_be}}</view>
-								<view class="step-record flex align-center justify-center">记录</view>
+								<view class="step-name" @click="onShowDetail(item,index,'add')">{{item.table_name_be}}
+								</view>
+								<view class="step-record flex align-center justify-center"
+									@click="onShowDetail(item,index,'log')">记录</view>
 							</view>
 						</view>
 					</view>
@@ -321,13 +330,16 @@
 <script>
 	import previewImage from '@/components/kxj-previewImage/kxj-previewImage.vue';
 	import infoSureModal from '../../components/info-sure-modal.vue'
+	// wifi设置弹窗
+	import wifiModal from '../../components/main/wifiModel.vue'
 	import {
 		mapState
 	} from 'vuex'
 	export default {
 		components: {
 			previewImage,
-			infoSureModal
+			infoSureModal,
+			wifiModal
 		},
 		data() {
 			return {
@@ -336,9 +348,11 @@
 				date: '', // 当前日期
 				week: '', //当前星期
 
+				settingWifi: false, // 是否正在设置wifi
+
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '',
+				shigongDH2: '230202002',
 				getFocus: true,
 
 				orderDetail: {
@@ -378,14 +392,15 @@
 					}
 				}, //点击新增所有信息
 				dataDetailList: [],
+				formulaeList: [],
 				inputIndex: -1,
 				showOrderDetail: false,
 				emploId: '', // 报工员工卡号
 				Value: [],
 				equimpArr: [], // 报工设备选择列表
-
 				timer: null, //右上角时间循环器
-				versionTimer: null //版本信息循环器
+				versionTimer: null, //版本信息循环器
+				setLineDataType: '', //add or update
 			}
 		},
 		onLoad() {
@@ -413,61 +428,29 @@
 		computed: {
 			...mapState(['vuex_Wifi', 'vuex_Requeset'])
 		},
+		watch: {
+			inputIndex() {
+				let tempLineInfo = {};
+				for (let item of this.dataDetailList) {
+					tempLineInfo['th_' + item.config_table_head_id] = item.this_value
+				}
+				let getNewLine = this.$utils.LineDataFormulae("updata", this.dataDetailList, tempLineInfo,
+					this.formulaeList, 'table');
+				for (let index in getNewLine) {
+					for (let key in this.dataDetailList) {
+						if ('th_' + this.dataDetailList[key].config_table_head_id == index) {
+							this.dataDetailList[key].this_value = getNewLine[index];
+						}
+					}
+				}
+			}
+		},
 		methods: {
 			// 获取当前时间和日期
 			getNowDate() {
 				this.time = this.$moment().format('HH:mm:ss')
 				this.date = this.$moment().format('YYYY-MM-DD')
 				this.week = this.$moment().format('dddd')
-			},
-			// 前往系统wifi设置页面
-			onSetWifi() {
-				// // #ifdef APP-PLUS
-				// var main = plus.android.runtimeMainActivity(); //获取activity  
-				// var Intent = plus.android.importClass('android.content.Intent');
-				// var Settings = plus.android.importClass('android.provider.Settings');
-				// var intent = new Intent(Settings.ACTION_WIFI_SETTINGS); //可设置表中所有Action字段  
-				// main.startActivity(intent);
-				// // #endif
-				uni.startWifi({
-					success: (res) => {
-						uni.getWifiList({
-							success: (res) => {
-								console.log(res)
-							}
-						})
-					},
-					fail: (err) => {
-
-					}
-				})
-				uni.onGetWifiList((res) => {
-					console.log(res)
-				})
-				uni.connectWifi({
-					SSID: '呱呱家',
-					BSSID: '18:f2:2c:8e:d6:5f',
-					//WiFi的密码 
-					password: '13175152848gu',
-					partialInfo: true,
-					maunal: false,
-					success: (res) => {
-						console.log(res)
-					}
-				})
-
-
-
-				// uni.connectWifi({
-				// 	SSID:wifi.SSID,
-				// 	password:,
-				// 	success:(res)=>{
-
-				// 	},
-				// 	fail:(err)=>{
-
-				// 	}
-				// })
 			},
 			// 获取报工表格
 			getPackTable() {
@@ -501,7 +484,9 @@
 				})
 			},
 			// 选择报工步骤
-			onShowDetail(item, index) {
+			onShowDetail(item, index, type) {
+				//是报工还是修改记录
+				this.setLineDataType = type;
 				this.tableInfoLink = item;
 				// 设置报工步骤选中的下标
 				this.stepsIndex = index
@@ -518,118 +503,134 @@
 						need_type: 'getMobTableList',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						config_table_id: this.tableInfoLink.config_table_id_main,
+						config_table_id: this.setLineDataType == 'log' ? this.tableInfoLink.config_table_id_be :
+							this.tableInfoLink.config_table_id_main,
 						order_id: this.orderDetail.order_id
 					}
 				}).then(res => {
-					const {
-						tableHeadList,
-						tableInfo
-					} = res.data.data
-					const list = res.data.data.dataInfo.list
-					this.totalRow = list.row
-					this.showOrderList = true
-					let getHtmlList = []
-					for (let index in list.dataList) {
-						var dataInfo = list.dataList[index];
-						var tempInfo = {
-							'th_com_name': list.dataList[index]['th_com_name'],
-							'order_index': list.dataList[index]['order_index'],
-							'tb_auto_id': list.dataList[index]['tb_auto_id'],
-							'config_table_id': list.dataList[index]['config_table_id'],
-							'order_id': list.dataList[index]['order_id'],
-							'bgColor': list.dataList[index]['mobsop_line_data_bgcolor'],
-							'bgTitle': list.dataList[index]['mobsop_line_data_title'],
-							'title': "",
-							'descA': "",
-							'descB': "",
-							'descC': "",
-							'descD': ""
-						}
-						for (let key in tableHeadList) {
-							var headInfo = tableHeadList[key];
-							if (typeof(headInfo['comm_set_json']) == 'string') {
-								headInfo['comm_set_json'] = JSON.parse(headInfo['comm_set_json']);
-							}
-
-							//标题
-							if (typeof(headInfo['comm_set_json']['user_head_show_title_mob']) != "undefined") {
-								if (tempInfo['title'] != '') {
-									tempInfo['title'] += " | ";
-								}
-								tempInfo['title'] += dataInfo['th_' + headInfo['config_table_head_id']] ?
-									dataInfo[
-										'th_' + headInfo['config_table_head_id']] : '';
-							}
-
-							//第一级
-							if (typeof(headInfo['comm_set_json']['user_head_show_desc_a_mob']) !=
-								"undefined") {
-								if (tempInfo['descA'] != '') {
-									tempInfo['descA'] += " | ";
-								}
-								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-								}
-								tempInfo['descA'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-									headInfo[
-										'config_table_head_id']] || '-');
-							}
-
-							if (typeof(headInfo['comm_set_json']['user_head_show_desc_b_mob']) !=
-								"undefined") {
-								if (tempInfo['descB'] != '') {
-									tempInfo['descB'] += " | ";
-								}
-								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-								}
-								tempInfo['descB'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-									headInfo[
-										'config_table_head_id']] || '-');
-							}
-
-							if (typeof(headInfo['comm_set_json']['user_head_show_desc_c_mob']) !=
-								"undefined") {
-								if (tempInfo['descC'] != '') {
-									tempInfo['descC'] += " | ";
-								}
-								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-								}
-								tempInfo['descC'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-									headInfo[
-										'config_table_head_id']] || '-');
-							}
-
-							if (typeof(headInfo['comm_set_json']['user_head_show_desc_d_mob']) !=
-								"undefined") {
-								if (tempInfo['descD'] != '') {
-									tempInfo['descD'] += " | ";
-								}
-								if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
-									dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
-								}
-								tempInfo['descD'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
-									headInfo[
-										'config_table_head_id']] || '-');
-							}
-						}
-						getHtmlList[index] = tempInfo;
-					}
-					this.dataList = getHtmlList
-					//总共有多少页
-					let count = Number(res.data.data.dataInfo.list.row) / 10
-					if (count > parseInt(count)) {
-						this.totalPage = parseInt(count) + 1;
-					} else {
-						this.totalPage = parseInt(count);
-					}
+					this.dealTableList(res)
 				}, () => {
 
 				}).catch(err => {
 					console.log(err)
 				})
+			},
+			// 处理getMobTableList接口返回值
+			dealTableList(res) {
+				const {
+					tableHeadList,
+					tableInfo
+				} = res.data.data
+				const list = res.data.data.dataInfo.list
+				this.totalRow = list.row
+				this.showOrderList = true
+				let getHtmlList = []
+				for (let index in list.dataList) {
+					var dataInfo = list.dataList[index];
+					var tempInfo = {
+						'th_com_name': list.dataList[index]['th_com_name'],
+						'order_index': list.dataList[index]['order_index'],
+						'tb_auto_id': list.dataList[index]['tb_auto_id'],
+						'config_table_id': list.dataList[index]['config_table_id'],
+						'order_id': list.dataList[index]['order_id'],
+						'title': "",
+						'descA': "",
+						'descB': "",
+						'descC': "",
+						'descD': ""
+					}
+					//如果后台没有返回颜色那么这里就要用是否完成来判断，当前返回给前端是是否完成
+					if (list.dataList[index]['mobsop_line_data_bgcolor'] == undefined || list.dataList[index][
+							'mobsop_line_data_title'
+						] ==
+						undefined) {
+						if (list.dataList[index]['list_status'] != 100 && list.dataList[index]['list_status'] != -100) {
+							tempInfo['mobsop_line_data_bgcolor'] = '#ababec';
+							tempInfo['mobsop_line_data_title'] = '未完成'
+						} else if (list.dataList[index]['list_status'] == 100) {
+							tempInfo['mobsop_line_data_bgcolor'] = 'green';
+							tempInfo['mobsop_line_data_title'] = '完成'
+						}
+					}
+					for (let key in tableHeadList) {
+						var headInfo = tableHeadList[key];
+						if (typeof(headInfo['comm_set_json']) == 'string') {
+							headInfo['comm_set_json'] = JSON.parse(headInfo['comm_set_json']);
+						}
+
+						//标题
+						if (typeof(headInfo['comm_set_json']['user_head_show_title_mob']) != "undefined") {
+							if (tempInfo['title'] != '') {
+								tempInfo['title'] += " | ";
+							}
+							tempInfo['title'] += dataInfo['th_' + headInfo['config_table_head_id']] ?
+								dataInfo[
+									'th_' + headInfo['config_table_head_id']] : '';
+						}
+
+						//第一级
+						if (typeof(headInfo['comm_set_json']['user_head_show_desc_a_mob']) !=
+							"undefined") {
+							if (tempInfo['descA'] != '') {
+								tempInfo['descA'] += " | ";
+							}
+							if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+								dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+							}
+							tempInfo['descA'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+								headInfo[
+									'config_table_head_id']] || '-');
+						}
+
+						if (typeof(headInfo['comm_set_json']['user_head_show_desc_b_mob']) !=
+							"undefined") {
+							if (tempInfo['descB'] != '') {
+								tempInfo['descB'] += " | ";
+							}
+							if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+								dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+							}
+							tempInfo['descB'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+								headInfo[
+									'config_table_head_id']] || '-');
+						}
+
+						if (typeof(headInfo['comm_set_json']['user_head_show_desc_c_mob']) !=
+							"undefined") {
+							if (tempInfo['descC'] != '') {
+								tempInfo['descC'] += " | ";
+							}
+							if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+								dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+							}
+							tempInfo['descC'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+								headInfo[
+									'config_table_head_id']] || '-');
+						}
+
+						if (typeof(headInfo['comm_set_json']['user_head_show_desc_d_mob']) !=
+							"undefined") {
+							if (tempInfo['descD'] != '') {
+								tempInfo['descD'] += " | ";
+							}
+							if (dataInfo['th_' + headInfo['config_table_head_id']] == "") {
+								dataInfo['th_' + headInfo['config_table_head_id']] = " — ";
+							}
+							tempInfo['descD'] += (headInfo['head_name'] || '-') + ":" + (dataInfo['th_' +
+								headInfo[
+									'config_table_head_id']] || '-');
+						}
+					}
+					getHtmlList[index] = tempInfo;
+				}
+				this.dataList = getHtmlList
+				//总共有多少页
+				let count = Number(res.data.data.dataInfo.list.row) / 10
+				if (count > parseInt(count)) {
+					this.totalPage = parseInt(count) + 1;
+				} else {
+					this.totalPage = parseInt(count);
+				}
 			},
 			// 打开施工单号输入框
 			onSetReCode() {
@@ -642,25 +643,47 @@
 				// 显示输入施工单号弹窗
 				this.showShiGongDH = true
 			},
-			// 确认/取消施工单号输入框
+			// 确认施工单号输入框
 			onInputSure() {
-				if (this.shigongDH2 != '') {
-					this.$api({
-						url: '/api/data.php',
-						method: 'post',
-						data: {
-							api_class: 'Open_sopEquipmentClass',
-							need_type: 'checkScanCodeFun',
-							mySysId: uni.getStorageSync('mySysId'),
-							loginsession_sop: uni.getStorageSync('loginsession'),
-							code: this.shigongDH2
-						}
-					}).then(res => {
-						const {
-							orderInfo,
-							customerInfo,
-							orderFilesList
-						} = res.data.data
+				this.$api({
+					url: '/api/data.php',
+					method: 'post',
+					data: {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'checkScanCodeFun',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						code: this.shigongDH2
+					}
+				}).then(res => {
+					const {
+						orderInfo,
+						customerInfo,
+						orderFilesList,
+						go_config_table_id,
+						go_tb_auto_id
+					} = res.data.data
+					if (go_config_table_id) {
+						// 获取需要报工的单据
+						this.$api({
+							url: '/api/data.php',
+							method: 'post',
+							data: {
+								api_class: 'Open_sopEquipmentClass',
+								need_type: 'getMobTableList',
+								mySysId: uni.getStorageSync('mySysId'),
+								loginsession_sop: uni.getStorageSync('loginsession'),
+								config_table_id: go_config_table_id,
+								order_id: orderInfo.order_id,
+								tb_auto_id: go_tb_auto_id
+							}
+						}).then(res => {
+							this.offInputSure()
+							this.dealTableList(res)
+						}).catch(err => {
+							console.log(err)
+						})
+					} else {
 						this.orderDetail.order_id = orderInfo.order_id
 						this.orderDetail.orderTitle = orderInfo.order_title
 						this.orderDetail.orderNum = orderInfo.order_index
@@ -670,21 +693,21 @@
 						this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
 						this.shiGongDImg = orderInfo.order_img || ''
 						this.tuGaoImgList = orderFilesList
-						this.showShiGongDH = false
+						this.offInputSure()
 						if (this.stepsIndex != -1) {
 							this.onShowDetail(this.stepsList[this.stepsIndex], this.stepsIndex)
 						}
-					}, () => {
-						// 请求的施工单号不存在
-						// 清空施工单号
-						this.shigongDH2 = ''
-					}).catch(err => {
-						console.log(err)
-					})
-				} else {
-					// 关闭施工单号输入框
-					this.showShiGongDH = false
-				}
+					}
+				}, () => {
+					// 请求的施工单号不存在，清空施工单号
+					this.shigongDH2 = ''
+				}).catch(err => {
+					console.log(err)
+				})
+			},
+			// 取消施工单号输入框
+			offInputSure() {
+				this.showShiGongDH = false
 			},
 			// 失焦后立即聚焦
 			toFocus() {
@@ -703,6 +726,7 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
+
 				// 清空员工卡号
 				this.onDelInput()
 				this.orderIndex = index
@@ -722,9 +746,10 @@
 						src_tb_auto_id: item.tb_auto_id,
 						src_config_table_id: item.config_table_id,
 						table_about_job: 'report',
-						tb_auto_id: '0'
+						tb_auto_id: this.setLineDataType == 'add' ? '0' : item.tb_auto_id
 					}
 				}).then(res => {
+					this.formulaeList = res.data.data.formulaeList
 					this.dataDetailList = res.data.data.tableHeadList
 					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
 					this.dataDetailAllList.yieldInfo = res.data.data.yieldInfo
@@ -764,11 +789,24 @@
 				})
 			},
 			// 修改选中设备值
-			bindPickerEquip(item, index) {
-				// console.log(item)
-				// console.log(index)
+			bindPickerEquip(item) {
+				// 赋值选中设备的名称及设备id
 				this.$set(this.dataDetailList[this.inputIndex], 'this_value', item.ass_equipment_id)
 				this.$set(this.dataDetailList[this.inputIndex], 'this_str', item.equipment_name)
+				// 
+				let tempLineInfo = {};
+				for (let item of this.dataDetailList) {
+					tempLineInfo['th_' + item.config_table_head_id] = item.this_value
+				}
+				let getNewLine = this.$utils.LineDataFormulae("updata", this.dataDetailList, tempLineInfo,
+					this.formulaeList, 'table');
+				for (let index in getNewLine) {
+					for (let key in this.dataDetailList) {
+						if ('th_' + this.dataDetailList[key].config_table_head_id == index) {
+							this.dataDetailList[key].this_value = getNewLine[index];
+						}
+					}
+				}
 				this.equimpArr = []
 			},
 			//键盘
@@ -808,6 +846,7 @@
 			},
 			// 提交报工信息
 			onSureEdit() {
+				var that = this;
 				// 让员工卡号输入框失焦
 				this.inputIndex = -2
 				let dataList = []
@@ -841,22 +880,35 @@
 						str: item.this_str
 					})
 				}
+				// 构建发送参数结构
+				var sendData = {
+					api_class: 'Open_sopEquipmentClass',
+					need_type: 'mobSetTableDataInfoFun',
+					mySysId: uni.getStorageSync('mySysId'),
+					loginsession_sop: uni.getStorageSync('loginsession'),
+					//tb_auto_id: that.setLineDataType=='add'?'0':this.dataDetailAllList.lineInfo.tb_auto_id,
+					//set_from_config_table_id: this.tableInfoLink.config_table_id_main,
+					//set_from_tb_auto_id: this.dataDetailAllList.tb_auto_id,
+					//order_id: this.orderDetail.order_id,
+					//config_table_id: this.tableInfoLink.config_table_id_be,
+					data_list: dataList,
+					finger_print: this.emploId
+				};
+				if (that.setLineDataType == 'add') {
+					sendData['tb_auto_id'] = 0;
+					sendData['set_from_config_table_id'] = this.tableInfoLink.config_table_id_main;
+					sendData['set_from_tb_auto_id'] = this.dataDetailAllList.tb_auto_id;
+					sendData['order_id'] = this.orderDetail.order_id;
+					sendData['config_table_id'] = this.tableInfoLink.config_table_id_be;
+				} else {
+					sendData['tb_auto_id'] = this.dataDetailAllList.lineInfo.tb_auto_id;
+					sendData['config_table_id'] = this.dataDetailAllList.lineInfo.config_table_id;
+					sendData['order_id'] = this.dataDetailAllList.lineInfo.order_id;
+				}
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
-					data: {
-						api_class: 'Open_sopEquipmentClass',
-						need_type: 'mobSetTableDataInfoFun',
-						mySysId: uni.getStorageSync('mySysId'),
-						loginsession_sop: uni.getStorageSync('loginsession'),
-						tb_auto_id: '0',
-						set_from_config_table_id: this.tableInfoLink.config_table_id_main,
-						set_from_tb_auto_id: this.dataDetailAllList.tb_auto_id,
-						order_id: this.orderDetail.order_id,
-						config_table_id: this.tableInfoLink.config_table_id_be,
-						data_list: dataList,
-						finger_print: this.emploId
-					}
+					data: sendData
 				}).then(res => {
 					uni.showToast({
 						title: '报工成功',
@@ -1023,7 +1075,7 @@
 
 <style lang="scss">
 	.container {
-		width: 100%;
+		width: 100vw;
 		height: 100vh;
 		// padding-top: 5vh;
 		flex-direction: column;
@@ -1066,18 +1118,18 @@
 
 			.card-div {
 				width: 40%;
-				height: 75%;
+				height: 65%;
 				background: #061830;
 				border-radius: 10rpx;
 				padding: 3vh;
 
 				.card-num,
 				input {
-					width: 95%;
-					height: 4vh;
+					width: 100%;
+					height: 12%;
 					background: #081E39;
 					border-radius: 1vh;
-					padding: 1.5vh 1.6vh;
+					text-indent: 20rpx;
 					border: 1rpx solid #9CC8ED;
 					font-weight: bold;
 					color: #9CC8ED;
@@ -1097,8 +1149,8 @@
 
 				.detail {
 					width: 100%;
-					height: 82%;
-					margin-top: 20rpx;
+					height: 86%;
+					margin-top: 2%;
 
 					.jsq {
 						width: 100%;
@@ -1133,13 +1185,22 @@
 						}
 					}
 
-					.edit-btn {
+					.card-operate {
 						width: 100%;
-						height: 20%;
-						color: #FFFFFF;
-						font-size: 1.7vw;
-						background-color: #73C7EF;
-						margin-top: 2vh;
+						height: 21%;
+						margin-top: 2%;
+
+						.edit-btn {
+							width: 45%;
+							height: 90%;
+							color: #FFFFFF;
+							font-size: 1.7vw;
+							background-color: #73C7EF;
+						}
+
+						.cancel {
+							background: #666;
+						}
 					}
 				}
 			}
@@ -1490,7 +1551,7 @@
 						border-bottom: 1rpx solid #DCDFE7;
 
 						.order-tags {
-							width: 4vw;
+							width: 3.5vw;
 							min-width: 3.5vw;
 							padding: 6vh 0;
 							border-radius: 2vw 0 0 2vw;
@@ -1500,7 +1561,7 @@
 							text-align: center;
 							font-weight: bold;
 							color: #FFFFFF;
-							margin-right: 1vw;
+							margin: 0 1vw;
 							padding-left: 0.6vh;
 						}
 
