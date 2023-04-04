@@ -1,4 +1,262 @@
 export default {
+	tempNameArray: [
+		'src_material_id',
+		'info_userid',
+		'info_userout_company_id',
+		'info_userout_company_id',
+		'info_workshop_id',
+		'info_workline_id',
+		'info_workset_id',
+		'src_material_part_line_id',
+		'src_material_part_floor_id',
+		'src_material_part_floor_data_id',
+		'order_id',
+		'order_id',
+		'info_userout_goods_address_id',
+		'info_userout_goods_address_id',
+		'src_material_price_id',
+		'src_material_price_id',
+		'ass_equipment_id',
+		'ass_mould_id',
+		'info_userout_company_id',
+		'info_userout_goods_address_id',
+		'src_material_technology_id',
+		'src_material_technology_link_id',
+		'config_form_table_id',
+		'info_userout_staff_link_id',
+		'info_userout_staff_link_id',
+		'info_userout_staff_link_id',
+		'src_material_type_id',
+	], //更新后返回根据head_info的style的数据
+	tempNameValueArray: [
+		'material_name',
+		'chname',
+		'com_name',
+		'com_name',
+		'workshop_name',
+		'workline_name',
+		'workset_name',
+		'line_name',
+		'floor_name',
+		'batch_number',
+		'order_title',
+		'order_index',
+		'info_userout_goods_address_id',
+		'info_userout_goods_address_id',
+		'src_material_price_id',
+		'src_material_price_id',
+		'equipment_name',
+		'mould_name',
+		'com_name',
+		'info_userout_goods_address_id',
+		'technology_name',
+		'link_remark',
+		'form_table_name',
+		'staff_name',
+		'staff_name',
+		'staff_name',
+		'type_name',
+	],
+	processingTableData(processingType, dataList, headList) {
+		if (processingType == 'form') {
+			var tableHeadId = "config_form_table_data_head_id";
+		} else {
+			var tableHeadId = "config_table_head_id";
+		}
+		var newList = [];
+		var orgList = dataList;
+		for (let index in dataList) {
+			var tempDataInfo = dataList[index];
+			for (let key in headList) {
+				var tempHeadInfo = headList[key];
+				var xxx = tempHeadInfo[tableHeadId];
+				var head_style = parseInt(tempHeadInfo['head_style']);
+				if (typeof(tempDataInfo['th_' + xxx]) == "undefined") {
+					continue;
+				}
+
+				if (head_style != 0) {
+					if (typeof(tempDataInfo['info_' + xxx][this.tempNameArray[head_style - 1]]) == "undefined" ||
+						tempDataInfo['th_' + xxx] == 0) {
+						tempDataInfo['th_' + xxx] = "未选择";
+					} else {
+						tempDataInfo['th_' + xxx] = tempDataInfo['info_' + xxx][this.tempNameValueArray[head_style -
+							1]];
+					}
+					continue;
+				}
+
+
+				//如果是选择的
+				if (tempHeadInfo['head_input_set'] == 20 || tempHeadInfo['head_input_set'] == 21) {
+					if (typeof(tempHeadInfo.head_input_setjson) == 'string') {
+						tempHeadInfo.head_input_setjson = JSON.parse(tempHeadInfo.head_input_setjson);
+					}
+					for (let iii in tempHeadInfo.head_input_setjson) {
+						if (tempHeadInfo.head_input_setjson[iii].value == tempDataInfo['th_' + xxx]) {
+							tempDataInfo['th_' + xxx] = tempHeadInfo.head_input_setjson[iii].name
+						}
+					}
+				} else if (tempHeadInfo['head_input_set'] == 30 || tempHeadInfo['head_input_set'] == 31) {
+					//如果是时间
+					var dateType = tempHeadInfo['head_input_set'] == 30 ? 'date' : 'day-minutes';
+					tempDataInfo['th_' + xxx] = this.dateFormatFun(tempDataInfo['th_' + xxx], dateType);
+				} else {
+					//把小数点去掉一下
+					if (tempHeadInfo['head_input_save'] == '2') {
+						tempDataInfo['th_' + xxx] = parseFloat(tempDataInfo['th_' + xxx]);
+					}
+				}
+			}
+			newList[newList.length] = tempDataInfo;
+		}
+		return newList
+	},
+	dateFormatFun: function(time, returnType) {
+		time = time + '';
+		if (time.length < 11) {
+			time = parseInt(time, 10) * 1000;
+		} else {
+			time = parseInt(time, 10)
+		}
+		if (time > 0) {
+			var dateStr = new Date(time);
+			if ((dateStr.getMonth() + 1) < 10) {
+				var month = '0' + (dateStr.getMonth() + 1);
+			} else {
+				var month = (dateStr.getMonth() + 1);
+			}
+
+			if (dateStr.getDate() < 10) {
+				var day = '0' + dateStr.getDate();
+			} else {
+				var day = dateStr.getDate();
+			}
+
+			if (dateStr.getHours() < 10) {
+				var hours = '0' + dateStr.getHours();
+			} else {
+				var hours = dateStr.getHours();
+			}
+
+			if (dateStr.getMinutes() < 10) {
+				var Minutes = '0' + dateStr.getMinutes();
+			} else {
+				var Minutes = dateStr.getMinutes();
+			}
+
+			if (returnType == null || returnType == 'normal') {
+				return dateStr.getFullYear() + '-' + month + '-' + day + ' ' + dateStr.getHours() + ':' + Minutes +
+					':' + dateStr.getSeconds();
+			} else if (returnType == 'date') {
+				return dateStr.getFullYear() + '-' + month + '-' + day;
+			} else if (returnType == 'day') {
+				return month + '-' + day;
+			} else if (returnType == 'day-minutes') {
+				return dateStr.getFullYear() + '-' + month + '-' + day + " " + hours + ':' + Minutes;
+			} else if (returnType == 'minutes') {
+				return hours + ':' + Minutes;
+			} else if (returnType == 'dateWeek') {
+				var weekday = new Array(7)
+				weekday[0] = "星期天"
+				weekday[1] = "星期一"
+				weekday[2] = "星期二"
+				weekday[3] = "星期三"
+				weekday[4] = "星期四"
+				weekday[5] = "星期五"
+				weekday[6] = "星期六"
+				return month + '-' + day + ' ' + weekday[dateStr.getDay()] + ' ' + hours + ':' + Minutes;
+
+			} else if (returnType == 'dateWeekEnd') {
+				var weekday = new Array(7)
+				weekday[0] = "星期天"
+				weekday[1] = "星期一"
+				weekday[2] = "星期二"
+				weekday[3] = "星期三"
+				weekday[4] = "星期四"
+				weekday[5] = "星期五"
+				weekday[6] = "星期六"
+				return month + '-' + day + ' ' + weekday[dateStr.getDay()];
+
+			} else if (returnType == 'countDown') {
+				var EndTime = time;
+				var NowTime = new Date();
+				var t = EndTime - NowTime.getTime();
+				var d = 0;
+				var h = 0;
+				var m = 0;
+				var s = 0;
+				if (t >= 0) {
+					d = Math.floor(t / 1000 / 60 / 60 / 24);
+					h = Math.floor(t / 1000 / 60 / 60 % 24);
+					m = Math.floor(t / 1000 / 60 % 60);
+					s = Math.floor(t / 1000 % 60);
+
+					return "剩余：" + d + "天" + h + "时" + m + "分";
+				} else { //超过
+					t = t * -1;
+					d = Math.floor(t / 1000 / 60 / 60 / 24);
+					h = Math.floor(t / 1000 / 60 / 60 % 24);
+					m = Math.floor(t / 1000 / 60 % 60);
+					s = Math.floor(t / 1000 % 60);
+					return "超过：" + d + "天" + h + "时" + m + "分";
+				}
+
+
+				//document.getElementById("t_d").innerHTML = d + "天";
+				//document.getElementById("t_h").innerHTML = h + "时";
+				//document.getElementById("t_m").innerHTML = m + "分";
+				//document.getElementById("t_s").innerHTML = s + "秒";
+				//return month + '-' + day + ' ' + weekday[dateStr.getDay()];
+
+			} else if (returnType == 'passTime') {
+				var UpdataTime = time;
+				var NowTime = new Date();
+				var t = UpdataTime - NowTime.getTime();
+				var d = 0;
+				var h = 0;
+				var m = 0;
+				var s = 0; { //超过
+					t = t * -1;
+					d = Math.floor(t / 1000 / 60 / 60 / 24);
+					h = Math.floor(t / 1000 / 60 / 60 % 24);
+					m = Math.floor(t / 1000 / 60 % 60);
+					s = Math.floor(t / 1000 % 60);
+					var returnStr = '';
+
+					if (d != 0) {
+						returnStr += d + "天";
+					}
+					if (h != 0) {
+						returnStr += h + "小时";
+					}
+					if (m != 0) {
+						returnStr += m + "分钟";
+					}
+
+					if (returnStr == '') {
+						return returnStr = '刚刚';
+					} else {
+						return returnStr + '前';
+					}
+				}
+
+
+				//document.getElementById("t_d").innerHTML = d + "天";
+				//document.getElementById("t_h").innerHTML = h + "时";
+				//document.getElementById("t_m").innerHTML = m + "分";
+				//document.getElementById("t_s").innerHTML = s + "秒";
+				//return month + '-' + day + ' ' + weekday[dateStr.getDay()];
+
+			} else {
+				return dateStr.getFullYear() + '-' + month + '-' + day + ' ' + dateStr.getHours() + ':' + Minutes +
+					':' + dateStr.getSeconds();
+			}
+
+		} else {
+			return '';
+		}
+	},
 	LineDataFormulae(from_type, headList, dataLineInfo, formulaeList, set_type, config) {
 
 		if (headList == undefined || headList.length == 0 || formulaeList == undefined || formulaeList.length == 0) {

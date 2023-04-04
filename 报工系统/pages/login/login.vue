@@ -144,10 +144,10 @@
 						})
 					}
 				}
-				// 若wifi未连接，则弹窗请用户连接网络
-				if(!this.vuex_Wifi){
-					return this.settingWifi = true
-				}
+				// // 若wifi未连接，则弹窗请用户连接网络
+				// if(!this.vuex_Wifi){
+				// 	return this.settingWifi = true
+				// }
 				// 检测网络是否连通
 				this.$api({
 					url: '/api/data.php',

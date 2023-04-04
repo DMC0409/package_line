@@ -4,7 +4,7 @@
 		<!-- 遮罩层 -->
 		<view class="mark" v-if="vuex_Requeset"></view>
 		<!-- 设置wifi -->
-		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
+		<!-- <wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal> -->
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
 		<!-- 确认结束环节弹窗 -->
@@ -70,103 +70,118 @@
 					<image @click="showOrderDetail = false" class="img-close" src="../../static/image/icon-close.png">
 					</image>
 				</view>
-				<view class="detail-content flex">
-					<view class="detail-con-left flex">
-						<view style="height:90%;overflow: auto;">
-							<view>
-								订单需要：
-								{{dataDetailAllList.yieldInfo.all.num ||0}}，
-								已经报工：
-								{{dataDetailAllList.yieldInfo.curr.num||0}}
-							</view>
-							<block v-for="(item,index) in dataDetailList" :key="index">
-								<view class="left-item flex align-center"
-									v-if="item.head_style == '0' && item.comm_set_json.show_job_submission!=undefined">
-									{{item.head_name}}：
-									<view class="type-btn flex align-center justify-start"
-										v-if="item.head_input_set == '30' || item.head_input_set == '31'">
-										<picker class="type-item" mode="date" :value="item.this_str"
-											:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined"
-											start="2020-01-01 00:00:00" end="2030-01-01 00:00:00">
-											<view>{{item.this_str}}</view>
-										</picker>
-									</view>
-									<view class="type-btn flex align-center justify-start"
-										v-else-if="item.head_input_set == '20' || item.head_input_set == '21'">
-										<view class="type-item" :class="inputIndex==index ?'input-selected':''"
-											@click="onFocusValue(index)">{{item.this_str}}</view>
-									</view>
-									<view class="type-btn flex align-center justify-start"
-										v-else-if="item.head_input_set == '1' || item.head_input_set == '2'">
-										<view class="type-item" :class="inputIndex==index ?'input-selected':''"
-											v-if="item.head_input_save == '1' || item.head_input_save == '2'"
-											@click="onFocusValue(index)">
-											{{item.this_value}}
-										</view>
-										<view class="type-item" v-else>
-											<input type="text" v-model="item.this_value"
-												:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined">
-										</view>
-									</view>
-									<view class="type-btn flex align-center justify-start" v-else>
-										<view class="type-item">
-											{{item.this_str}}
-										</view>
-									</view>
+				<view class="detail-content">
+					<view class="detail-con-out flex">
+						<view class="detail-con-left flex">
+							<view style="height:90%;overflow: auto;">
+								<view>
+									订单需要：
+									{{dataDetailAllList.yieldInfo.all.num ||0}}，
+									已经报工：
+									{{dataDetailAllList.yieldInfo.curr.num||0}}
 								</view>
-								<view class="left-item flex align-center"
-									v-else-if="item.head_style=='17' && item.comm_set_json.show_job_submission!=undefined">
-									{{item.head_name}}：
-									<view class="type-btn flex align-center justify-start">
-										<view class="type-item" @click="getEquimp(index)">
-											{{item.this_str?item.this_str:'-'}}
+								<block v-for="(item,index) in dataDetailList" :key="index">
+									<view class="left-item flex align-center"
+										v-if="item.head_style == '0' && item.comm_set_json.show_job_submission!=undefined">
+										{{item.head_name}}：
+										<view class="type-btn flex align-center justify-start"
+											v-if="item.head_input_set == '30' || item.head_input_set == '31'">
+											<picker class="type-item" mode="date" :value="item.this_str"
+												:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined"
+												start="2020-01-01 00:00:00" end="2030-01-01 00:00:00">
+												<view>{{item.this_str}}</view>
+											</picker>
 										</view>
-										<image v-if="equimpArr.length!=0" class="triangle"
-											src="../../static/image/triangle-up.png">
-										</image>
-										<view class="equipmOut flex" v-if="equimpArr.length!=0">
-											<view class="eachEquip" @click.stop="bindPickerEquip(i)"
-												v-for="(i,num) in equimpArr" :key="num">
-												{{i.equipment_name}}
+										<view class="type-btn flex align-center justify-start"
+											v-else-if="item.head_input_set == '20' || item.head_input_set == '21'">
+											<view class="type-item" @click="getPickerArr(index)">
+												{{item.this_str}}
+											</view>
+											<image v-if="pickerArr.length!=0" class="triangle"
+												src="../../static/image/triangle-up.png">
+											</image>
+											<view class="equipmOut flex" v-if="pickerArr.length!=0">
+												<view class="eachEquip" @click.stop="bindPickerArr(i)"
+													v-for="(i,num) in pickerArr" :key="num">
+													{{i.label}}
+												</view>
+											</view>
+										</view>
+										<view class="type-btn flex align-center justify-start"
+											v-else-if="item.head_input_set == '1' || item.head_input_set == '2'">
+											<view class="type-item" :class="inputIndex==index ?'input-selected':''"
+												v-if="item.head_input_save == '1' || item.head_input_save == '2'"
+												@click="onFocusValue(index)">
+												{{item.this_value}}
+											</view>
+											<view class="type-item" v-else>
+												<input type="text" v-model="item.this_value"
+													:disabled="item.comm_set_json.set_job_submission!=undefined || item.comm_set_json.isedit!=undefined">
+											</view>
+										</view>
+										<view class="type-btn flex align-center justify-start" v-else>
+											<view class="type-item">
+												{{item.this_str}}
 											</view>
 										</view>
 									</view>
-								</view>
-								<view class="left-item flex align-center"
-									v-else-if="item.comm_set_json.show_job_submission!=undefined">
-									{{item.head_name}}：
-									<view class="type-btn flex align-center justify-start">
-										<view class="type-item">{{item.this_str}}</view>
+									<view class="left-item flex align-center"
+										v-else-if="item.head_style=='17' && item.comm_set_json.show_job_submission!=undefined">
+										{{item.head_name}}：
+										<view class="type-btn flex align-center justify-start">
+											<view class="type-item" @click="getEquimp(index)">
+												{{item.this_str?item.this_str:'-'}}
+											</view>
+											<image v-if="equimpArr.length!=0" class="triangle"
+												src="../../static/image/triangle-up.png">
+											</image>
+											<view class="equipmOut flex" v-if="equimpArr.length!=0">
+												<view class="eachEquip" @click.stop="bindPickerEquip(i)"
+													v-for="(i,num) in equimpArr" :key="num">
+													{{i.equipment_name}}
+												</view>
+											</view>
+										</view>
 									</view>
-								</view>
-							</block>
-						</view>
-					</view>
-					<view class="detail-con-right">
-						<view class="jsq flex">
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('1')">1</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('2')">2</view>
-							<view class="jsq-item flex justify-center align-center border-right-none"
-								@tap="onClickNum('3')">3</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('4')">4</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('5')">5</view>
-							<view class="jsq-item flex justify-center align-center border-right-none"
-								@tap="onClickNum('6')">6</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('7')">7</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('8')">8</view>
-							<view class="jsq-item flex justify-center align-center border-right-none"
-								@tap="onClickNum('9')">9</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('*')">*</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('0')">0</view>
-							<view class="jsq-item flex justify-center align-center border-right-none"
-								@tap="onClickNum('.')">.</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('-')">-</view>
-							<view class="jsq-item flex justify-center align-center" @tap="onClickNum('clear')">清除</view>
-							<view class="jsq-item flex justify-center align-center border-right-none"
-								@tap="onClickNum('del')">
-								<image src="../../static/image/icon-jsq-close.png"></image>
+									<view class="left-item flex align-center"
+										v-else-if="item.comm_set_json.show_job_submission!=undefined">
+										{{item.head_name}}：
+										<view class="type-btn flex align-center justify-start">
+											<view class="type-item">{{item.this_str}}</view>
+										</view>
+									</view>
+								</block>
 							</view>
 						</view>
+						<view class="detail-con-right">
+							<view class="jsq flex">
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('1')">1</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('2')">2</view>
+								<view class="jsq-item flex justify-center align-center border-right-none"
+									@tap="onClickNum('3')">3</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('4')">4</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('5')">5</view>
+								<view class="jsq-item flex justify-center align-center border-right-none"
+									@tap="onClickNum('6')">6</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('7')">7</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('8')">8</view>
+								<view class="jsq-item flex justify-center align-center border-right-none"
+									@tap="onClickNum('9')">9</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('*')">*</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('0')">0</view>
+								<view class="jsq-item flex justify-center align-center border-right-none"
+									@tap="onClickNum('.')">.</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('-')">-</view>
+								<view class="jsq-item flex justify-center align-center" @tap="onClickNum('clear')">清除
+								</view>
+								<view class="jsq-item flex justify-center align-center border-right-none"
+									@tap="onClickNum('del')">
+									<image src="../../static/image/icon-jsq-close.png"></image>
+								</view>
+							</view>
+						</view>
+					</view>
+					<view class="sendReport flex align-center justify-end">
 						<view class="edit-btn flex align-center justify-center">
 							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
 								:class="inputIndex == -1?'checkOut':''">
@@ -177,6 +192,9 @@
 								</image>
 							</view>
 							<view class="submit-btn flex align-center justify-center" @click="onSureEdit">提交</view>
+						</view>
+						<view class="face-check flex align-center justify-center">
+							人脸识别
 						</view>
 					</view>
 				</view>
@@ -213,7 +231,7 @@
 						</view>
 					</block>
 				</view>
-		
+
 				<view class="list-footer flex align-center justify-end">
 					<!-- <view class="list-btn" @click="onSureLink" style="background-color:green;">
 						确认环节
@@ -396,6 +414,7 @@
 				emploId: '', // 报工员工卡号
 				Value: [],
 				equimpArr: [], // 报工设备选择列表
+				pickerArr: [], // 报工表单可选择的数据
 				timer: null, //右上角时间循环器
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
@@ -523,14 +542,16 @@
 				this.totalRow = list.row
 				this.showOrderList = true
 				let getHtmlList = []
-				for (let index in list.dataList) {
-					var dataInfo = list.dataList[index];
+				//处理一下表单表头数据
+				let getDataList = this.$utils.processingTableData('normal', list.dataList, tableHeadList);
+				for (let index in getDataList) {
+					var dataInfo = getDataList[index];
 					var tempInfo = {
-						'th_com_name': list.dataList[index]['th_com_name'],
-						'order_index': list.dataList[index]['order_index'],
-						'tb_auto_id': list.dataList[index]['tb_auto_id'],
-						'config_table_id': list.dataList[index]['config_table_id'],
-						'order_id': list.dataList[index]['order_id'],
+						'th_com_name': dataInfo['th_com_name'],
+						'order_index': dataInfo['order_index'],
+						'tb_auto_id': dataInfo['tb_auto_id'],
+						'config_table_id': dataInfo['config_table_id'],
+						'order_id': dataInfo['order_id'],
 						'title': "",
 						'descA': "",
 						'descB': "",
@@ -538,14 +559,14 @@
 						'descD': ""
 					}
 					//如果后台没有返回颜色那么这里就要用是否完成来判断，当前返回给前端是是否完成
-					if (list.dataList[index]['mobsop_line_data_bgcolor'] == undefined || list.dataList[index][
+					if (dataInfo['mobsop_line_data_bgcolor'] == undefined || dataInfo[
 							'mobsop_line_data_title'
 						] ==
 						undefined) {
-						if (list.dataList[index]['list_status'] != 100 && list.dataList[index]['list_status'] != -100) {
+						if (dataInfo['list_status'] != 100 && dataInfo['list_status'] != -100) {
 							tempInfo['mobsop_line_data_bgcolor'] = '#ababec';
 							tempInfo['mobsop_line_data_title'] = '未完成'
-						} else if (list.dataList[index]['list_status'] == 100) {
+						} else if (dataInfo['list_status'] == 100) {
 							tempInfo['mobsop_line_data_bgcolor'] = 'green';
 							tempInfo['mobsop_line_data_title'] = '完成'
 						}
@@ -724,7 +745,6 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
-
 				// 清空员工卡号
 				this.onDelInput()
 				this.orderIndex = index
@@ -739,12 +759,14 @@
 						need_type: 'getTableDataInfoFun',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						config_table_id: this.tableInfoLink.config_table_id_be,
-						order_id: this.orderDetail.order_id,
-						src_tb_auto_id: item.tb_auto_id,
-						src_config_table_id: item.config_table_id,
-						table_about_job: 'report',
-						tb_auto_id: this.setLineDataType == 'add' ? '0' : item.tb_auto_id
+						kyle_data: JSON.stringify({
+							order_id: this.orderDetail.order_id,
+							config_table_id: this.tableInfoLink.config_table_id_be,
+							tb_auto_id: this.setLineDataType == 'add' ? '0' : item.tb_auto_id,
+							src_tb_auto_id: item.tb_auto_id,
+							src_config_table_id: item.config_table_id,
+							table_about_job: 'report',
+						})
 					}
 				}).then(res => {
 					this.formulaeList = res.data.data.formulaeList
@@ -766,6 +788,42 @@
 				// uni.hideKeyboard();
 				this.Value = []
 				this.inputIndex = index || 0
+			},
+			// 获取报工表单可选列表
+			getPickerArr(index) {
+				//报工时候set_job_submission，编辑时isedit
+				if (this.dataDetailList[index].comm_set_json['set_job_submission'] != undefined || this.dataDetailList[
+						index].comm_set_json[
+						'isedit'] != undefined) {
+					return;
+				}
+				if (this.dataDetailList[index]['head_style'] != 0) {
+					//除了设备可以选择操作，其他暂时不可以
+				} else {
+					if (this.dataDetailList[index]['head_input_set'] == 20) {
+						this.inputIndex = index || 0
+						this.pickerArr = this.dataDetailList[index].head_input_setjson
+					} else {
+						if ((this.dataDetailList[index]['head_input_save'] == 1 || this.dataDetailList[index][
+								'head_input_save'
+							] == 2) &&
+							this.dataDetailList[index]['head_input_set'] != 30 && this.dataDetailList[index][
+								'head_input_set'
+							] != 31) {
+							// this.setData({
+							// 	setNumSign: true,
+							// 	setNumString: selectHeadInfo.this_value == 0 || isNaN(selectHeadInfo.this_value) ?
+							// 		'' : selectHeadInfo.this_value
+							// });
+						}
+					}
+				}
+			},
+			bindPickerArr(item) {
+				// 赋值选中的可选值
+				this.$set(this.dataDetailList[this.inputIndex], 'this_value', item.value)
+				this.$set(this.dataDetailList[this.inputIndex], 'this_str', item.label)
+				this.pickerArr = []
 			},
 			// 获取设备列表
 			getEquimp(index) {
@@ -1266,149 +1324,30 @@
 					width: 100%;
 					height: 90%;
 
-					.detail-con-left {
-						width: 63%;
-						height: 100%;
-						flex-direction: column;
-						color: #A6C4E6;
-						// font-size: 10rpx;
-						font-size: 1.5vw;
-						// font-weight: bold;
-						// padding: 15rpx 0 0 14rpx;
-						padding: 3vh 0 0 3vh;
-						position: relative;
+					.sendReport {
+						width: 100%;
+						height: 15%;
 
-						.left-item {
-							margin: 3vh 0;
-
-							.eachInput {
-								width: 17vw;
-								height: 2vw;
-								line-height: 2vw;
-								background: #0A223B;
-								border: 1rpx solid #0A223B;
-								border-radius: 5rpx;
-								padding: 5rpx 16rpx;
-								outline: 0;
-								font-size: 1.5vw;
-								font-weight: bold;
-								color: #A4CEF4;
-							}
-
-							.input-selected {
-								border: 1rpx solid #00FFFF;
-								box-sizing: border-box;
-							}
-
-							.type-btn {
-								width: 70%;
-								flex-wrap: wrap;
-								position: relative;
-
-								.equipmOut {
-									position: absolute;
-									top: 8vh;
-									width: 85%;
-									max-height: 30vh;
-									background: #fff;
-									flex-wrap: wrap;
-									z-index: 99;
-									border-radius: 10rpx;
-									overflow: auto;
-
-									.eachEquip {
-										background: #A4CEF4;
-										color: #5d5d5d;
-										// width: 44%;
-										text-align: center;
-										border-radius: 10rpx;
-										padding: 10rpx 20rpx;
-										margin: 15rpx;
-									}
-								}
-
-								.triangle {
-									position: absolute;
-									bottom: -1vh;
-									left: 40%;
-									width: 1vw;
-									height: 1vw;
-								}
-
-								input {
-									font-size: 1.5vw;
-								}
-
-								.type-item {
-									width: 80%;
-									margin: 10rpx;
-									padding: 10rpx 12rpx;
-									background: #061830;
-									border-radius: 5rpx;
-									font-size: 1.5vw;
-								}
-
-								.type-item-selected {
-									background: #A6C4E6;
-									color: #FFFFFF;
-								}
-							}
-						}
-					}
-
-					.detail-con-right {
-						width: 37%;
-						height: 100%;
-						background-color: #061830;
-						border-radius: 0rpx 11rpx 11rpx 0rpx;
-						border-left: 1rpx solid #42B5F1;
-						box-sizing: border-box;
-
-						.jsq {
-							width: 100%;
-							height: 80%;
-							flex-wrap: wrap;
-
-							.jsq-item {
-								flex: 1;
-								width: 33.3%;
-								min-width: 33.3%;
-								max-width: 33.3%;
-								font-size: 3vw;
-								font-weight: 600;
-								color: #FFFFFF;
-								border-bottom: 1rpx solid #68686F;
-								border-right: 1rpx solid #68686F;
-								box-sizing: border-box;
-
-								image {
-									width: 2vw;
-									height: 2vw;
-									position: absolute;
-									// margin-top: 14rpx;
-									// margin-left: -14rpx;
-								}
-							}
-
-							.border-right-none {
-								border-right: none
-							}
-
-							.border-bottom-none {
-								border-bottom: none
-							}
+						.face-check {
+							width: 20%;
+							height: 70%;
+							color: #fff;
+							font-size: 1.5vw;
+							background: #73C7EF;
+							border-radius: 0.5vh;
+							text-align: center;
+							margin: 0 20rpx;
 						}
 
 						.edit-btn {
-							width: 95%;
-							height: 20%;
-							margin: 0 auto;
+							width: 70%;
+							height: 100%;
 							color: #FFFFFF;
 							font-size: 1.5vw;
 
 							.inputContent {
 								width: 70%;
-								height: 50%;
+								height: 70%;
 								color: #9CC8ED;
 								background: #0A223B;
 								border-top-left-radius: 0.5vh;
@@ -1439,7 +1378,7 @@
 
 							.submit-btn {
 								width: 20%;
-								height: 50%;
+								height: 70%;
 								font-size: 1.5vw;
 								background: #73C7EF;
 								border-radius: 0 0.5vh 0.5vh 0;
@@ -1447,6 +1386,146 @@
 							}
 						}
 					}
+
+					.detail-con-out {
+						width: 100%;
+						height: 85%;
+
+						.detail-con-left {
+							width: 63%;
+							height: 100%;
+							flex-direction: column;
+							color: #A6C4E6;
+							// font-size: 10rpx;
+							font-size: 1.5vw;
+							// font-weight: bold;
+							// padding: 15rpx 0 0 14rpx;
+							padding: 3vh 0 0 3vh;
+							position: relative;
+
+							.left-item {
+								margin: 3vh 0;
+
+								.eachInput {
+									width: 17vw;
+									height: 2vw;
+									line-height: 2vw;
+									background: #0A223B;
+									border: 1rpx solid #0A223B;
+									border-radius: 5rpx;
+									padding: 5rpx 16rpx;
+									outline: 0;
+									font-size: 1.5vw;
+									font-weight: bold;
+									color: #A4CEF4;
+								}
+
+								.input-selected {
+									border: 1rpx solid #00FFFF;
+									box-sizing: border-box;
+								}
+
+								.type-btn {
+									width: 70%;
+									flex-wrap: wrap;
+									position: relative;
+
+									.equipmOut {
+										position: absolute;
+										top: 8vh;
+										width: 85%;
+										max-height: 30vh;
+										background: #fff;
+										flex-wrap: wrap;
+										z-index: 99;
+										border-radius: 10rpx;
+										overflow: auto;
+
+										.eachEquip {
+											background: #A4CEF4;
+											color: #5d5d5d;
+											// width: 44%;
+											text-align: center;
+											border-radius: 10rpx;
+											padding: 10rpx 20rpx;
+											margin: 15rpx;
+										}
+									}
+
+									.triangle {
+										position: absolute;
+										bottom: -1vh;
+										left: 40%;
+										width: 1vw;
+										height: 1vw;
+									}
+
+									input {
+										font-size: 1.5vw;
+									}
+
+									.type-item {
+										width: 100%;
+										margin: 10rpx;
+										padding: 10rpx 12rpx;
+										background: #061830;
+										border-radius: 5rpx;
+										font-size: 1.5vw;
+									}
+
+									.type-item-selected {
+										background: #A6C4E6;
+										color: #FFFFFF;
+									}
+								}
+							}
+						}
+
+						.detail-con-right {
+							width: 37%;
+							height: 100%;
+							background-color: #061830;
+							border-radius: 0rpx 11rpx 11rpx 0rpx;
+							border-left: 1rpx solid #42B5F1;
+							box-sizing: border-box;
+
+							.jsq {
+								width: 100%;
+								height: 100%;
+								flex-wrap: wrap;
+
+								.jsq-item {
+									flex: 1;
+									width: 33.3%;
+									min-width: 33.3%;
+									max-width: 33.3%;
+									font-size: 3vw;
+									font-weight: 600;
+									color: #FFFFFF;
+									border-bottom: 1rpx solid #68686F;
+									border-right: 1rpx solid #68686F;
+									box-sizing: border-box;
+
+									image {
+										width: 2vw;
+										height: 2vw;
+										position: absolute;
+										// margin-top: 14rpx;
+										// margin-left: -14rpx;
+									}
+								}
+
+								.border-right-none {
+									border-right: none
+								}
+
+								.border-bottom-none {
+									border-bottom: none
+								}
+							}
+						}
+					}
+
 				}
 			}
 		}
