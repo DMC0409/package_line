@@ -184,7 +184,8 @@ export default {
 								if (isNaN(formulae_condition_field)) {
 									for (let headKey in headList) {
 										if (headList[headKey][thisHeadId] == formulae_value[
-											'formulae_condition_field'] && (headList[headKey].head_input_set == 20 ||
+												'formulae_condition_field'] && (headList[headKey].head_input_set ==
+												20 ||
 												headList[headKey].head_input_set == 21)) {
 											for (let selectIndex in headList[headKey].head_input_setjson) {
 												if (headList[headKey].head_input_setjson[selectIndex].name ==
@@ -302,4 +303,37 @@ export default {
 		//return this.loadTableBeforeHandlerFun(dataLineInfo, headList, set_type);
 		//return dataLineInfo;
 	}, //返回一个可以新增或者保存的信息数据，提交保存或者新增的时候
+	// 判断wifi返回值状态
+	judgeWifiState(err) {
+		switch (err.errCode) {
+			case 12001:
+				uni.showToast({
+					title: '系统不支持',
+					icon: 'error',
+					duration: 2000
+				})
+				break
+			case 12002:
+				uni.showToast({
+					title: '密码错误',
+					icon: 'error',
+					duration: 2000
+				})
+				break
+			case 12005:
+				uni.showToast({
+					title: '未打开wifi',
+					icon: 'error',
+					duration: 2000
+				})
+				break
+			case 12013:
+				uni.showToast({
+					title: '配置过期',
+					icon: 'error',
+					duration: 2000
+				})
+				break
+		}
+	}
 }

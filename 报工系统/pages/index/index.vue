@@ -3,6 +3,7 @@
 		style="background-image: url('../../static/image/page-back.png');">
 		<!-- 遮罩层 -->
 		<view class="mark" v-if="vuex_Requeset"></view>
+		<!-- 设置wifi -->
 		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
@@ -14,11 +15,8 @@
 			<view class="setting-div flex align-center justify-center" @click.stop="onEgg">
 				<view class="set-title">设置</view>
 				<view class="set-btn-div flex justify-around">
-					<view class="set-btn" @click.stop="onInitSet('init')">
+					<view class="set-btn" @click.stop="onInitSet">
 						初始化设定
-					</view>
-					<view class="set-btn" @click.stop="onInitSet('toface')">
-						人脸识别
 					</view>
 				</view>
 			</view>
@@ -184,24 +182,6 @@
 				</view>
 			</view>
 		</view>
-		<!-- 头部 -->
-		<view class="header flex image-back-norepeat align-center justify-between"
-			style="background-image: url(../../static/image/header-back.png);">
-			<view class="reCheck" @click="onSetReCode">
-				重新扫描
-			</view>
-			<image class="logo" src="../../static/image/logo.png"></image>
-			<view class="setting flex align-center justify-end">
-				<view class="version">{{appVersion?'V'+appVersion:''}}</view>
-				<image src="../../static/image/icon-setting.png" @click="showSetting=true"></image>
-				<image v-if="vuex_Wifi" src="../../static/image/icon-wifi.png" @click="settingWifi = true"></image>
-				<image v-else src="../../static/image/no-wifi.png" @click="settingWifi = true"></image>
-				<view class="time flex">
-					<text class="time-moment">{{time}}</text>
-					<text class="time-date">{{date}} {{week}}</text>
-				</view>
-			</view>
-		</view>
 		<!-- 弹窗 -->
 		<view class="dialog-order" v-if="showOrderList" ref="msk" @click="closeOrderList">
 			<!-- 订单 -->
@@ -233,7 +213,7 @@
 						</view>
 					</block>
 				</view>
-
+		
 				<view class="list-footer flex align-center justify-end">
 					<!-- <view class="list-btn" @click="onSureLink" style="background-color:green;">
 						确认环节
@@ -244,6 +224,24 @@
 						<view>{{orderPageIndex}}/{{orderTotalPage}}</view>
 						<view class="list-btn" @click="onPageListCit('next')">下一页</view>
 					</view>
+				</view>
+			</view>
+		</view>
+		<!-- 头部 -->
+		<view class="header flex image-back-norepeat align-center justify-between"
+			style="background-image: url(../../static/image/header-back.png);">
+			<view class="reCheck" @click="onSetReCode">
+				重新扫描
+			</view>
+			<image class="logo" src="../../static/image/logo.png"></image>
+			<view class="setting flex align-center justify-end">
+				<view class="version">{{appVersion?'V'+appVersion:''}}</view>
+				<image src="../../static/image/icon-setting.png" @click="showSetting=true"></image>
+				<image v-if="vuex_Wifi" src="../../static/image/icon-wifi.png" @click="settingWifi = true"></image>
+				<image v-else src="../../static/image/no-wifi.png" @click="settingWifi = true"></image>
+				<view class="time flex">
+					<text class="time-moment">{{time}}</text>
+					<text class="time-date">{{date}} {{week}}</text>
 				</view>
 			</view>
 		</view>
@@ -846,7 +844,6 @@
 			},
 			// 提交报工信息
 			onSureEdit() {
-				var that = this;
 				// 让员工卡号输入框失焦
 				this.inputIndex = -2
 				let dataList = []
@@ -894,7 +891,7 @@
 					data_list: dataList,
 					finger_print: this.emploId
 				};
-				if (that.setLineDataType == 'add') {
+				if (this.setLineDataType == 'add') {
 					sendData['tb_auto_id'] = 0;
 					sendData['set_from_config_table_id'] = this.tableInfoLink.config_table_id_main;
 					sendData['set_from_tb_auto_id'] = this.dataDetailAllList.tb_auto_id;
@@ -949,18 +946,14 @@
 				}
 			},
 			// 重新登录
-			onInitSet(type) {
-				if (type == 'init') {
-					uni.removeStorageSync('loginsession')
-					uni.reLaunch({
-						url: '../login/login'
-					})
-				} else {
-					return uni.showToast({
-						title: '暂无',
-						icon: 'none'
-					})
-				}
+			onInitSet() {
+				// 清除持久化数据
+				uni.removeStorageSync('loginsession')
+				uni.removeStorageSync('mySysId')
+				// 跳转至登陆页面
+				uni.reLaunch({
+					url: '../login/login'
+				})
 			},
 			// 检查版本信息
 			checkVersion() {

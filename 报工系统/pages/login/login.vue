@@ -1,6 +1,8 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
+		<!-- 设置wifi -->
+		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 遮罩层 -->
 		<view class="mark" v-if="vuex_Requeset"></view>
 		<!-- 导航栏 -->
@@ -58,6 +60,8 @@
 </template>
 
 <script>
+	// wifi设置弹窗
+	import wifiModal from '../../components/main/wifiModel.vue'
 	import {
 		mapState,
 		mapMutations
@@ -86,8 +90,12 @@
 				// 记录迷你键盘当前输入的信息
 				currentValue: [],
 				// 迷你键盘选中的按键
-				selectedNum: -1
+				selectedNum: -1,
+				settingWifi: false, // 是否正在设置wifi
 			}
+		},
+		components: {
+			wifiModal
 		},
 		onLoad() {
 			// 已登陆过的用户退出系统后将持久化的mySysId回显
@@ -96,10 +104,9 @@
 			}
 		},
 		computed: {
-			...mapState(['vuex_Requeset'])
+			...mapState(['vuex_Requeset','vuex_Wifi'])
 		},
 		methods: {
-			...mapMutations(['UPDATE_WIFI']),
 			// 迷你数字键盘
 			onClickDH(num) {
 				this.selectedNum = num
@@ -137,6 +144,10 @@
 						})
 					}
 				}
+				// 若wifi未连接，则弹窗请用户连接网络
+				if(!this.vuex_Wifi){
+					return this.settingWifi = true
+				}
 				// 检测网络是否连通
 				this.$api({
 					url: '/api/data.php',
@@ -147,8 +158,6 @@
 						mySysId: this.formList[0].value
 					}
 				}).then(res => {
-					// 修改网络状态为在线
-					this.UPDATE_WIFI(true)
 					// EPC登陆
 					this.$api({
 						url: '/api/data.php',
@@ -174,10 +183,7 @@
 							url: '../index/index'
 						})
 					}, () => {}).catch(() => {})
-				}, () => {
-					// 修改网络状态为离线
-					this.UPDATE_WIFI(false)
-				}).catch(() => {})
+				}, () => {}).catch(() => {})
 			}
 		}
 	}
