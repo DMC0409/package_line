@@ -15,46 +15,46 @@
 		},
 		onShow: function() {
 			console.log('App Show')
-			// 开启wifi功能模块
-			uni.startWifi({
-				success: (res) => {
-					// 获取当前使用的wifi
-					this.onCheckNet()
-				},
-				fail: (err) => {
-					// 修改网络状态为离线
-					this.UPDATE_WIFI(false)
-					this.$utils.judgeWifiState(err)
-				}
-			})
-			// 检查wifi
-			this.timer = setInterval(async () => {
-				await this.onCheckNet()
-			}, 60 * 1000);
+			// // 开启wifi功能模块
+			// uni.startWifi({
+			// 	success: (res) => {
+			// 		// 获取当前使用的wifi
+			// 		this.onCheckNet()
+			// 	},
+			// 	fail: (err) => {
+			// 		// 修改网络状态为离线
+			// 		this.UPDATE_WIFI(false)
+			// 		this.$utils.judgeWifiState(err)
+			// 	}
+			// })
+			// // 检查wifi
+			// this.timer = setInterval(async () => {
+			// 	await this.onCheckNet()
+			// }, 60 * 1000);
 		},
 		onHide: function() {
 			console.log('App Hide')
-			clearInterval(this.timer)
-			uni.stopWifi({
-				success: (res) => {},
-				fail: (err) => {}
-			})
+			// clearInterval(this.timer)
+			// uni.stopWifi({
+			// 	success: (res) => {},
+			// 	fail: (err) => {}
+			// })
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI']),
 			async onCheckNet() {
-				// 获取已连接wifi信息
-				uni.getConnectedWifi({
-					success: (res) => {
-						// 修改网络状态为在线
-						this.UPDATE_WIFI(true)
-					},
-					fail: (err) => {
-						// 修改网络状态为离线
-						this.UPDATE_WIFI(false)
-						this.$utils.judgeWifiState(err)
-					}
-				})
+				// // 获取已连接wifi信息
+				// uni.getConnectedWifi({
+				// 	success: (res) => {
+				// 		// 修改网络状态为在线
+				// 		this.UPDATE_WIFI(true)
+				// 	},
+				// 	fail: (err) => {
+				// 		// 修改网络状态为离线
+				// 		this.UPDATE_WIFI(false)
+				// 		this.$utils.judgeWifiState(err)
+				// 	}
+				// })
 			}
 		}
 	}

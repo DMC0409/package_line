@@ -7,6 +7,10 @@
 		{
 			"path": "pages/login/login",
 			"name": "order"
+		},
+		{
+			"path": "pages/catchImg/catchImg",
+			"name": "catchImg"
 		}
 	],
 	"globalStyle": {
