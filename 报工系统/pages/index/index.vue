@@ -3,6 +3,9 @@
 		style="background-image: url('../../static/image/page-back.png');">
 		<!-- 自定义键盘 -->
 		<v-keyboard ref="keyboard" :disorderly="false" @typing="typing" @enter="enter"></v-keyboard>
+		<!-- 人脸识别窗口 -->
+		<checkFace v-if="checkIngFace" @stopCheckFace="stopCheckFace" :dataDetailAllList="dataDetailAllList">
+		</checkFace>
 		<!-- 遮罩层 -->
 		<view class="mark" v-if="vuex_Requeset"></view>
 		<!-- 设置wifi -->
@@ -352,8 +355,8 @@
 	import wifiModal from '../../components/main/wifiModel.vue'
 	// 自定义键盘
 	import vKeyboard from '@/components/VKeyboard/VKeyboard.vue'
-	// 直播流获取图片方法
-	import permission from '../../utils/permission.js'
+	// 人脸识别窗口
+	import checkFace from '../../components/main/checkFace.vue'
 	import {
 		mapState
 	} from 'vuex'
@@ -362,7 +365,8 @@
 			previewImage,
 			infoSureModal,
 			wifiModal,
-			vKeyboard
+			vKeyboard,
+			checkFace
 		},
 		data() {
 			return {
@@ -426,26 +430,10 @@
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
 
-				pusher: null,
-				scanWin: null,
-				faceInitTimeout: null,
-				snapshTimeout: null,
-				uploadFileTask: null,
-				faceCheckNum: 0,
-
-				screamWidth: 0,
-				screamHeight: 0,
+				checkIngFace: false, // 人脸识别窗口
 			}
 		},
 		onLoad() {
-			// 获取屏幕宽高
-			let that = this
-			uni.getSystemInfo({
-				success: function(res) {
-					that.screamWidth = res.windowWidth;
-					that.screamHeight = res.windowHeight;
-				}
-			});
 			// 获取报工表格
 			this.getPackTable()
 			// 获取右上角时间值
@@ -799,7 +787,6 @@
 						})
 					}
 				}).then(res => {
-					console.log('aaaaaaaaaaaaaaaaaaa',res)
 					this.formulaeList = res.data.data.formulaeList
 					this.dataDetailList = res.data.data.tableHeadList
 					this.dataDetailAllList.lineInfo = res.data.data.lineInfo
@@ -1030,181 +1017,10 @@
 			},
 			// 进行人脸识别
 			toCheckFace() {
-				//#ifdef APP-PLUS
-				this.faceInit();
-				//#endif
+				this.checkIngFace = true
 			},
-			//初始化
-			faceInit() {
-				//显示加载框
-				uni.showLoading({
-					title: '加载中'
-				});
-				this.faceCheckNum = 0
-				this.faceInitTimeout = setTimeout(async () => {
-					//创建livepusher
-					if (uni.getSystemInfoSync().platform === 'android') {
-						const data1 = await permission.requestAndroidPermission(
-							"android.permission.RECORD_AUDIO")
-						const data2 = await permission.requestAndroidPermission("android.permission.CAMERA")
-						if (data1 == 1 && data2 == 1) {
-							this.pusherInit();
-						}
-					} else {
-						this.pusherInit();
-					}
-					//隐藏加载框
-					uni.hideLoading();
-					// 覆盖在视频之上的内容，根据实际情况编写
-					// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
-					// this.scanWin = plus.webview.create('/static/456.html', '', {
-					//  background: 'transparent'
-					// });
-					// //新引入的webView显示
-					// this.scanWin.show();
-				}, 2000);
-			},
-			//初始化播放器
-			pusherInit() {
-				// 获取当前窗口
-				const currentWebview = this.$mp.page.$getAppWebview();
-				// 创建推流，url不填写代表不上传
-				this.pusher = plus.video.createLivePusher('livepusher', {
-					url: '',
-					top: '0',
-					left: '0',
-					width: this.screamWidth + 'px',
-					height: this.screamHeight + 'px',
-					position: 'absolute',
-					aspect: '9:16',
-					muted: true,
-					whiteness: 5,
-					'z-index': 999,
-					direction: -90
-				});
-				console.log(this.pusher)
-				// 将推流对象加到当前页面中
-				currentWebview.append(this.pusher);
-				//反转摄像头
-				this.pusher.switchCamera();
-				//开始预览
-				this.pusher.preview();
-				this.snapshTimeout = setTimeout(() => {
-					this.snapshotPusher()
-				}, 1000)
-
-			},
-			//快照
-			snapshotPusher() {
-				if (this.faceCheckNum > 3) {
-					uni.showToast({
-						title: '对比超时',
-						icon: 'error',
-						duration: 2000
-					})
-					this.pusher.stop()
-					// currentWebview
-					// console.log(currentWebview)
-				} else {
-					this.faceCheckNum++
-					this.pusher.snapshot(
-						e => {
-							//拿到本地文件路径
-							var src = e.tempImagePath;
-							// console.log(src)
-							//获取图片base64
-							this.getMinImage(src);
-						},
-						function(e) {
-							plus.nativeUI.alert('snapshot error: ' + JSON.stringify(e));
-						}
-					);
-				}
-			},
-
-			//使用plus.zip.compressImage压缩图片
-			getMinImage(imgPath) {
-				let that = this
-				plus.zip.compressImage({
-						src: imgPath,
-						dst: imgPath,
-						overwrite: true,
-						quality: 40
-					},
-					zipRes => {
-						var reader = new plus.io.FileReader();
-						reader.onloadend = res => {
-							//获取图片base64	
-							// console.log(res.target.result)
-							uni.request({
-								url: 'https://aip.baidubce.com/rest/2.0/face/v3/search?access_token=' +
-									this.dataDetailAllList.subToken, //接口地址：前缀+方法中传入的地址
-								method: 'POST', //请求方法：传入的方法或者默认是“GET”
-								data: {
-									image: res.target.result,
-									image_type: 'BASE64',
-									group_id_list: uni.getStorageSync('mySysId')
-								},
-								headers: {
-									'Content-Type ': 'text/html;charset=utf-8'
-								},
-								success: (res) => {
-									console.log(res)
-									if (res.data.error_msg == "pic not has face") {
-										uni.showToast({
-											title: '未捕获到人脸',
-											icon: 'error',
-											duration: 2000
-										})
-										this.snapshotPusher()
-									}
-									if (res.data.error_msg == "image check fail") {
-										this.snapshotPusher()
-									}
-									if (res.data.error_msg == 'SUCCESS') {
-										if (res.data.result.user_list[0].score > 80) {
-											if (res.data.result.user_list[0].user_id != this
-												.dataDetailAllList
-												.userInfo.info_userid) {
-												uni.showModal({
-													title: '失败',
-													content: '您的脸型不正确',
-													showCancel: false,
-													success(res) {}
-												});
-											} else {
-												uni.showModal({
-													title: 'OK',
-													content: '人脸识别成功',
-													showCancel: false,
-													success(res) {
-														this.onSureEdit()
-													}
-												});
-											}
-										} else {
-											uni.showModal({
-												title: '错误',
-												content: '对比失败',
-												showCancel: false,
-												success(res) {}
-											});
-										}
-									}
-								},
-								fail: (err) => {
-									this.snapshotPusher()
-									console.log(err)
-								}
-							})
-						};
-						//一定要使用plus.io.convertLocalFileSystemURL将target地址转换为本地文件地址，否则readAsDataURL会找不到文件
-						reader.readAsDataURL(plus.io.convertLocalFileSystemURL(zipRes.target));
-					},
-					function(error) {
-						console.log('Compress error!', error);
-					}
-				);
+			stopCheckFace() {
+				this.checkIngFace = false
 			},
 			// 执行扫一扫获取单号
 			toScan() {
