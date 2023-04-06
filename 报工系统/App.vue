@@ -64,3 +64,6 @@
 	/*每个页面公共css */
 	@import 'static/css/common.scss'
 </style>
+<style>
+	@import './font/iconfont/iconfont.css'
+</style>

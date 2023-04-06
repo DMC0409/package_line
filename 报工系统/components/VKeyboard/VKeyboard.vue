@@ -8,35 +8,34 @@
 				</template>
 				<view class="key-button digit">
 					<i class="iconfont icon-shouqijianpan middle" v-if="digital" @tap="deactivate"></i>
-					<i class="iconfont icon-ABC middle" v-else @tap="typingLetter"></i>
+					<i class="iconfont iconABC middle" v-else @tap="typingLetter"></i>
 				</view>
 			</view>
 			<view class="special-button-box">
-				<view class="key-button special-button gray" @tap="backspace"><i class="iconfont icon-backspace large"></i></view>
-				<view class="key-button special-button gray" @tap="enter"><i class="iconfont icon-huiche large"></i></view>
+				<view class="key-button special-button gray" @tap="backspace"><i class="iconfont iconbackspace large"></i></view>
+				<view class="key-button special-button gray" @tap="enter"><i class="iconfont iconhuiche large"></i></view>
 			</view>
 		</view>
 		<view class="full-keyboard" v-else>
 			<view class="line" v-for="(letters, index) in lines" :key="index">
-				<view class="letter key-button special-key gray" v-if="index === 3 && mode === 'letter'" @tap="toggleCase"><i :class="'iconfont ' + (lowercase ? 'icon-xiaoxie' : 'icon-daxie')"></i></view>
+				<view class="letter key-button special-key gray" v-if="index === 3 && mode === 'letter'" @tap="toggleCase"><i :class="'iconfont ' + (lowercase ? 'iconxiangshang' : 'iconxiangshangpaixu-copy')"></i></view>
 				<view class="letter key-button normal" v-for="letter in letters" @tap="typing(letter)" :key="letter">{{letter}}</view>
-				<view class="letter key-button special-key gray" v-if="index === 3" @tap="backspace"><i class="iconfont icon-backspace"></i></view>
+				<view class="letter key-button special-key gray" v-if="index === 3" @tap="backspace"><i class="iconfont iconbackspace"></i></view>
 			</view>
 			<view class="line special-line">
 				<view class="letter key-button swith-key gray">
-					<i class="iconfont icon-fuhao" @tap="typingSymbol" v-if="mode === 'letter'"></i>
-					<i class="iconfont icon-ABC" @tap="typingLetter" v-if="mode === 'symbol'"></i>
+					<i class="iconfont iconfuhao-" @tap="typingSymbol" v-if="mode === 'letter'"></i>
+					<view class="iconfont iconABC" @tap="typingLetter" v-if="mode === 'symbol'"></view>
 				</view>
 				<view class="letter key-button space" @tap="typing(' ')"><text class="logo">Magician 安全键盘</text></view>
-				<view class="letter key-button swith-key gray" @tap="typingDigit"><i class="iconfont icon-shuzi"></i></view>
-				<view class="letter key-button swith-key gray" @tap="enter"><i class="iconfont icon-huiche"></i></view>
+				<view class="letter key-button swith-key gray" @tap="typingDigit"><i class="iconfont iconshuzi"></i></view>
+				<view class="letter key-button swith-key gray" @tap="enter"><i class="iconfont iconhuiche"></i></view>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
-	import './css.scss'
 	import { natural, order, disorder, symbols, digits, KEYBOARD_MODE } from './utils'
 	export default {
 		props: {
@@ -192,8 +191,8 @@
 				}
 				
 				.letter {
-					height: 4em;
-					line-height: 4em;
+					height: 3em;
+					line-height: 3em;
 					font-size: 1em;
 					
 					&:not(:last-child) {
@@ -202,7 +201,7 @@
 				}
 				
 				.normal {
-					width: 6em;
+					width: 5em;
 				}
 				
 				.special-key {
@@ -286,4 +285,5 @@
 			display: block;
 		}
 	}
+	@import './css.scss'
 </style>

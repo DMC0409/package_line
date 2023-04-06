@@ -71,35 +71,46 @@
 				this.pusher = plus.video.createLivePusher('livepusher', {
 					url: '',
 					top: '0',
-					left: this.screamWidth / 2 - this.screamHeight / 16 * 9 / 2 + 'px',
-					width: this.screamHeight / 16 * 9 + 'px',
+					// left:'0',
+					left: this.screamWidth / 2 - this.screamHeight / 16 * 12 / 2 + 'px',
+					width: this.screamHeight / 16 * 12 + 'px',
 					height: this.screamHeight + 'px',
-					mode:'FHD',
+					mode: 'FHD',
 					// width: '100%',
 					// height: '100%',
 					aspect: '9:16',
 					muted: true,
+					videoFullscreen: 'landscape-primary'
 				});
-				
+
 				// 将推流对象加到当前页面中
 				this.currentWebview.append(this.pusher);
 				//反转摄像头
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
+				this.pusher.requestFullScreen({
+					success: res => {
+						console.log('我要执行了');
+					},
+					fail: res => {
+						console.log('fullscreen fail');
+					},
+					direction: 90
+				});
 				this.snapshotPusher()
 			},
 			//快照
 			snapshotPusher() {
-				if (this.faceCheckNum > 3) {
+				if (this.faceCheckNum > 1) {
 					uni.showToast({
 						title: '对比超时',
 						icon: 'error',
 						duration: 2000
 					})
-					// 关闭直播流
-					this.pusher.close()
-					this.$emit('stopCheckFace')
+					// // 关闭直播流
+					// this.pusher.close()
+					// this.$emit('stopCheckFace')
 
 				} else {
 					uni.showToast({
@@ -138,7 +149,7 @@
 						var reader = new plus.io.FileReader();
 						reader.onloadend = res => {
 							//获取图片base64	
-							// console.log(res.target.result)
+							console.log(res.target.result)
 							uni.request({
 								url: 'https://aip.baidubce.com/rest/2.0/face/v3/search?access_token=' +
 									this.dataDetailAllList.subToken, //接口地址：前缀+方法中传入的地址

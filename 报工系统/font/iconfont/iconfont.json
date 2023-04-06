@@ -1,0 +1,58 @@
+{
+  "id": "3997601",
+  "name": "package_line",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "603298",
+      "name": "向上-排序",
+      "font_class": "xiangshangpaixu-copy",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "2966928",
+      "name": "符号-@",
+      "font_class": "fuhao-",
+      "unicode": "e704",
+      "unicode_decimal": 59140
+    },
+    {
+      "icon_id": "6149283",
+      "name": "回车",
+      "font_class": "huiche",
+      "unicode": "e651",
+      "unicode_decimal": 58961
+    },
+    {
+      "icon_id": "9512492",
+      "name": "退格",
+      "font_class": "backspace",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "12592157",
+      "name": "ABC",
+      "font_class": "ABC",
+      "unicode": "e6e7",
+      "unicode_decimal": 59111
+    },
+    {
+      "icon_id": "16322878",
+      "name": "向上",
+      "font_class": "xiangshang",
+      "unicode": "e6f9",
+      "unicode_decimal": 59129
+    },
+    {
+      "icon_id": "27402380",
+      "name": "数字",
+      "font_class": "shuzi",
+      "unicode": "ee18",
+      "unicode_decimal": 60952
+    }
+  ]
+}
