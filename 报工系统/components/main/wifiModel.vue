@@ -1,5 +1,7 @@
 <template>
-	<view class="wifiOut flex align-center justify-center" @click="toClose">
+	<view class="wifiOut flex align-center justify-center">
+		<!-- 自定义键盘 -->
+		<v-keyboard ref="keyboard" :disorderly="false" @typing="typing" @enter="enter"></v-keyboard>
 		<view class="wifiMain" @click.stop="doNoting">
 			<view class="title flex align-center justify-between">
 				<text>wifi列表</text>
@@ -20,9 +22,12 @@
 				</block>
 				<block v-else>
 					<!-- 输入密码框 -->
-					<view class="psd flex align-center justify-center">
-						<view class="psdTitle" @click="a">请输入密码：</view>
-						<input type="text" v-model="password">
+					<view class="psd flex align-center justify-start">
+						<view class="psdTitle flex justify-between align-center">
+							<view>请输入密码：</view>
+							<view class="btn" @click="copy">复制密码</view>
+						</view>
+						<view class="showPSD" @click.stop="openKeyBoard">{{password==''?'请输入密码':password}}</view>
 						<view class="operate flex align-center justify-around">
 							<view class="btn cancel" @click="cancelLink">取消</view>
 							<view class="btn" @click="toLink">确认</view>
@@ -39,6 +44,8 @@
 		mapState,
 		mapMutations
 	} from 'vuex'
+	// 自定义键盘
+	import vKeyboard from '@/components/VKeyboard/VKeyboard.vue'
 	export default {
 		data() {
 			return {
@@ -52,88 +59,111 @@
 				nowWifi: {}
 			}
 		},
+		components: {
+			vKeyboard
+		},
 		mounted() {
-			// //显示加载框
-			// uni.showLoading({
-			// 	title: '加载中'
-			// });
-			// uni.startWifi({
-			// 	success: (res) => {
-			// 		uni.getWifiList({
-			// 			success: (res) => {
-			// 				console.log('toGetWifi:', res)
-			// 			}
-			// 		})
-			// 	},
-			// 	fail: (err) => {
-			// 		this.$utils.judgeWifiState(err)
-			// 	}
-			// })
-			// // 获取已连接wifi信息
-			// uni.getConnectedWifi({
-			// 	success: (res) => {
-			// 		this.nowWifi = res.wifi
-			// 		//隐藏加载框
-			// 		uni.hideLoading();
-			// 		console.log('now:', this.nowWifi)
-			// 	},
-			// 	fail: (err) => {
-			// 	}
-			// })
-			// uni.onGetWifiList((res) => {
-			// 	console.log('wifi-----', res)
-			// 	// 过滤相同SSID的wifi，保留信号最强的wifi
-			// 	let dealHashMap = res.wifiList.reduce((hashMap, next) => {
-			// 		hashMap[next.SSID] = hashMap[next.SSID] ? [...hashMap[next.SSID], next] : [next];
-			// 		return hashMap;
-			// 	}, {});
-			// 	let eachMax = []
-			// 	for (let i in dealHashMap) {
-			// 		let signalArr = dealHashMap[i].sort((a, b) => {
-			// 			return b.signalStrength - a.signalStrength;
-			// 		});
-			// 		eachMax.push(signalArr[0])
-			// 	}
-			// 	this.list = eachMax.sort((a, b) => {
-			// 		return b.signalStrength - a.signalStrength;
-			// 	});
-			// })
+			// 提示加载中
+			this.UPDATE_TIPMODAL({
+				isShow: true,
+				tipText: '加载中', // 提示信息
+				tipIcon: 'iconloading', // 图标名称
+				mark: true, // 是否有蒙版
+				duration: 0, // 持续时间
+			})
+			uni.startWifi({
+				success: (res) => {
+					uni.getWifiList({
+						success: (res) => {
+							console.log('toGetWifi:', res)
+						}
+					})
+				},
+				fail: (err) => {
+					this.$utils.judgeWifiState(err)
+				}
+			})
+			// 获取已连接wifi信息
+			uni.getConnectedWifi({
+				success: (res) => {
+					this.nowWifi = res.wifi
+					console.log('now:', this.nowWifi)
+				},
+				fail: (err) => {}
+			})
+			uni.onGetWifiList((res) => {
+				console.log('wifi-----', res)
+				// 过滤相同SSID的wifi，保留信号最强的wifi
+				let dealHashMap = res.wifiList.reduce((hashMap, next) => {
+					hashMap[next.SSID] = hashMap[next.SSID] ? [...hashMap[next.SSID], next] : [next];
+					return hashMap;
+				}, {});
+				let eachMax = []
+				for (let i in dealHashMap) {
+					let signalArr = dealHashMap[i].sort((a, b) => {
+						return b.signalStrength - a.signalStrength;
+					});
+					eachMax.push(signalArr[0])
+				}
+				this.list = eachMax.sort((a, b) => {
+					return b.signalStrength - a.signalStrength;
+				});
+				// 关闭提示加载中
+				this.UPDATE_TIPMODAL({
+					isShow: false,
+					tipText: '', // 提示信息
+					tipIcon: '', // 图标名称
+					mark: true, // 是否有蒙版
+					duration: 0, // 持续时间
+				})
+			})
 		},
 		methods: {
-			...mapMutations(['UPDATE_WIFI']),
-			a(){
+			...mapMutations(['UPDATE_WIFI', 'UPDATE_TIPMODAL']),
+			openKeyBoard() {
 				this.$refs.keyboard.activate();
 			},
-			typing(){},
-			enter(){},
+			typing(data) {
+				if (data.backspace) {
+					this.password = this.password.substr(0, this.password.length - 1);
+				} else {
+					this.password += data.char
+				}
+			},
+			enter() {
+				this.$refs.keyboard.deactivate();
+			},
 			setWifiPassword(item) {
 				this.wifiItem = item
 			},
 			toLink() {
-				// uni.connectWifi({
-				// 	SSID: this.wifiItem.SSID,
-				// 	BSSID: this.wifiItem.BSSID,
-				// 	//WiFi的密码 
-				// 	password: this.password,
-				// 	partialInfo: true,
-				// 	maunal: false,
-				// 	success: (res) => {
-				// 		// 修改网络状态为在线
-				// 		this.UPDATE_WIFI(true)
-				// 		uni.showToast({
-				// 			title: '连接成功',
-				// 			icon: 'success',
-				// 			duration: 2000
-				// 		})
-				// 		this.toClose()
+				uni.connectWifi({
+					SSID: this.wifiItem.SSID,
+					BSSID: this.wifiItem.BSSID,
+					//WiFi的密码 
+					password: this.password,
+					partialInfo: true,
+					maunal: false,
+					success: (res) => {
+						// 修改网络状态为在线
+						this.UPDATE_WIFI(true)
+						// 提示连接成功
+						this.UPDATE_TIPMODAL({
+							isShow: true,
+							tipText: '连接成功', // 提示信息
+							tipIcon: 'iconchenggong', // 图标名称
+							mark: true, // 是否有蒙版
+							duration: 2000, // 持续时间
+						})
+						this.toClose()
 
-				// 	},
-				// 	fail: (err) => {
-				// 		console.log(err)
-				// 		this.$utils.judgeWifiState(err)
-				// 		this.password = ''
-				// 	}
-				// })
+					},
+					fail: (err) => {
+						console.log(err)
+						this.$utils.judgeWifiState(err)
+						this.password = ''
+					}
+				})
 			},
 			cancelLink() {
 				this.wifiItem = ''
@@ -141,13 +171,18 @@
 			toClose() {
 				this.$emit('closeWifi')
 			},
-			doNoting() {}
+			doNoting() {},
+			copy() {
+				uni.setClipboardData({
+					data: this.password
+				});
+			}
 		},
 		destroyed() {
-			// uni.stopWifi({
-			// 	success: (res) => {},
-			// 	fail: (err) => {}
-			// })
+			uni.stopWifi({
+				success: (res) => {},
+				fail: (err) => {}
+			})
 		}
 	}
 </script>
@@ -174,13 +209,21 @@
 				flex-direction: column;
 
 				.psdTitle {
-					text-align: left;
-					margin-bottom: 20rpx;
+					width: 100%;
+					margin: 40rpx 0;
+					.btn {
+						width: 10vw;
+						padding: 20rpx 0;
+						background: #028306;
+						text-align: center;
+						color: #fff;
+						border-radius: 10rpx;
+					}
 				}
 
-				input {
+				.showPSD {
 					width: 90%;
-					height: 7vh;
+					padding: 20rpx;
 					border: 1px solid #1087fe;
 				}
 
@@ -190,7 +233,7 @@
 
 					.btn {
 						width: 45%;
-						padding: 10rpx 0;
+						padding: 20rpx 0;
 						background: #73C7EF;
 						text-align: center;
 						border-radius: 10rpx;

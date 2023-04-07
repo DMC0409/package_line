@@ -1,14 +1,14 @@
 {
   "id": "uni-wifi",
   "displayName": "uni-wifi",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "wifi管理",
   "keywords": [
     "wifi"
 ],
   "repository": "",
   "engines": {
-    "HBuilderX": "^3.7.7"
+    "HBuilderX": "^3.6.11"
   },
   "dcloudext": {
     "type": "uts",

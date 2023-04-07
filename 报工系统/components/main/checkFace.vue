@@ -17,23 +17,12 @@
 				snapshTimeout: null,
 				uploadFileTask: null,
 				faceCheckNum: 0,
-
-				screamWidth: 0,
-				screamHeight: 0,
 			}
 		},
 		props: ['dataDetailAllList'],
 		mounted() {
 			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
-			// 获取屏幕宽高
-			let that = this
-			uni.getSystemInfo({
-				success: function(res) {
-					that.screamWidth = res.windowWidth;
-					that.screamHeight = res.windowHeight;
-					that.faceInit()
-				}
-			});
+			this.faceInit()
 		},
 		methods: {
 			...mapMutations(['UPDATE_TIPMODAL']),
@@ -47,27 +36,27 @@
 					mark: false, // 是否有蒙版
 					duration: 0, // 持续时间
 				})
-				// this.faceCheckNum = 0
-				// this.faceInitTimeout = setTimeout(async () => {
-				// 	//创建livepusher
-				// 	if (uni.getSystemInfoSync().platform === 'android') {
-				// 		const data1 = await permission.requestAndroidPermission(
-				// 			"android.permission.RECORD_AUDIO")
-				// 		const data2 = await permission.requestAndroidPermission("android.permission.CAMERA")
-				// 		if (data1 == 1 && data2 == 1) {
-				// 			this.pusherInit();
-				// 		}
-				// 	} else {
-				// 		this.pusherInit();
-				// 	}
-				// 	// 覆盖在视频之上的内容，根据实际情况编写
-				// 	// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
-				// 	// this.scanWin = plus.webview.create('/static/456.html', '', {
-				// 	//  background: 'transparent'
-				// 	// });
-				// 	// //新引入的webView显示
-				// 	// this.scanWin.show();
-				// }, 2000);
+				this.faceCheckNum = 0
+				this.faceInitTimeout = setTimeout(async () => {
+					//创建livepusher
+					if (uni.getSystemInfoSync().platform === 'android') {
+						const data1 = await permission.requestAndroidPermission(
+							"android.permission.RECORD_AUDIO")
+						const data2 = await permission.requestAndroidPermission("android.permission.CAMERA")
+						if (data1 == 1 && data2 == 1) {
+							this.pusherInit();
+						}
+					} else {
+						this.pusherInit();
+					}
+					// 覆盖在视频之上的内容，根据实际情况编写
+					// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
+					// this.scanWin = plus.webview.create('/static/456.html', '', {
+					//  background: 'transparent'
+					// });
+					// //新引入的webView显示
+					// this.scanWin.show();
+				}, 2000);
 			},
 			//初始化播放器
 			pusherInit() {
@@ -78,13 +67,10 @@
 					url: '',
 					top: '0',
 					left: '0',
-					// left: this.screamWidth / 2 - this.screamHeight / 4 * 4 / 2 + 'px',
-					width: this.screamHeight + 'px',
-					height: this.screamWidth + 'px',
 					mode: 'FHD',
-					// width: '100%',
-					// height: '100%',
-					aspect: '3:4',
+					width: '100%',
+					height: '100%',
+					aspect: '9:16',
 					muted: true,
 				});
 				// 将推流对象加到当前页面中
@@ -97,7 +83,7 @@
 			},
 			//快照
 			snapshotPusher() {
-				if (this.faceCheckNum > 1) {
+				if (this.faceCheckNum > 2) {
 					// 提示对比超时
 					this.UPDATE_TIPMODAL({
 						isShow: true,
@@ -179,11 +165,17 @@
 									if (res.data.error_msg == 'SUCCESS') {
 										if (res.data.result.user_list[0] && res.data.result.user_list[
 												0].score > 80) {
-											// 提示
-
+											// 提示人脸识别成功
+											this.UPDATE_TIPMODAL({
+												isShow: true,
+												tipText: '人脸识别成功', // 提示信息
+												tipIcon: 'iconchenggong', // 图标名称
+												mark: false, // 是否有蒙版
+												duration: 2000, // 持续时间
+											})
 											this.$emit(
-													'checkSuccess', res.data.result.user_list[0]
-													) // 调用父组件方法提交报工信息
+												'checkSuccess', res.data.result.user_list[0]
+											) // 调用父组件方法提交报工信息
 											this.pusher.close() // 关闭直播流
 											this.$emit(
 												'stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
@@ -199,6 +191,7 @@
 												mark: false, // 是否有蒙版
 												duration: 2000, // 持续时间
 											})
+											this.snapshotPusher()
 										}
 									}
 								},

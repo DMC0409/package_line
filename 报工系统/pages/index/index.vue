@@ -1,8 +1,6 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
-		<!-- 自定义键盘 -->
-		<v-keyboard ref="keyboard" :disorderly="false" @typing="typing" @enter="enter"></v-keyboard>
 		<!-- 人脸识别窗口 -->
 		<checkFace v-if="checkIngFace" @stopCheckFace="stopCheckFace" @checkSuccess="onSureEdit"
 			:dataDetailAllList="dataDetailAllList">
@@ -354,19 +352,17 @@
 	import infoSureModal from '../../components/info-sure-modal.vue'
 	// wifi设置弹窗
 	import wifiModal from '../../components/main/wifiModel.vue'
-	// 自定义键盘
-	import vKeyboard from '@/components/VKeyboard/VKeyboard.vue'
 	// 人脸识别窗口
 	import checkFace from '../../components/main/checkFace.vue'
 	import {
-		mapState
+		mapState,
+		mapMutations
 	} from 'vuex'
 	export default {
 		components: {
 			previewImage,
 			infoSureModal,
 			wifiModal,
-			vKeyboard,
 			checkFace
 		},
 		data() {
@@ -380,7 +376,7 @@
 
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '230202002',
+				shigongDH2: '',
 				getFocus: true,
 
 				orderDetail: {
@@ -431,7 +427,7 @@
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
 
-				checkIngFace: true, // 人脸识别窗口
+				checkIngFace: false, // 人脸识别窗口
 			}
 		},
 		onLoad() {
@@ -479,9 +475,16 @@
 						}
 					}
 				}
+			},
+			vuex_Wifi(newVal,oldVal){
+				if(newVal){
+					// 网络一旦连接则获取报工表格
+					this.getPackTable()
+				}
 			}
 		},
 		methods: {
+			...mapMutations(['UPDATE_TIPMODAL']),
 			// 获取当前时间和日期
 			getNowDate() {
 				this.time = this.$moment().format('HH:mm:ss')
@@ -921,8 +924,6 @@
 			},
 			// 提交报工信息
 			onSureEdit(data) {
-				console.log(data)
-				return
 				// 让员工卡号输入框失焦
 				this.inputIndex = -2
 				// 计算上报工资，以防用户自行虚假填写
@@ -970,6 +971,7 @@
 						str: item.this_str
 					})
 				}
+				console.log(data)
 				// 构建发送参数结构
 				var sendData = {
 					api_class: 'Open_sopEquipmentClass',
@@ -982,7 +984,7 @@
 					//order_id: this.orderDetail.order_id,
 					//config_table_id: this.tableInfoLink.config_table_id_be,
 					data_list: dataList,
-					finger_print: this.emploId
+					finger_print: data ? 'user_id@' + data.user_id : this.emploId
 				};
 				if (this.setLineDataType == 'add') {
 					sendData['tb_auto_id'] = 0;
@@ -1000,10 +1002,13 @@
 					method: 'post',
 					data: sendData
 				}).then(res => {
-					uni.showToast({
-						title: '报工成功',
-						icon: 'success',
-						duration: 2000
+					// 提示报工成功
+					this.UPDATE_TIPMODAL({
+						isShow: true,
+						tipText: '报工成功', // 提示信息
+						tipIcon: 'iconchenggong', // 图标名称
+						mark: true, // 是否有蒙版
+						duration: 2000, // 持续时间
 					})
 					// 聚焦至员工卡号输入框
 					this.inputIndex = -1
@@ -1076,11 +1081,15 @@
 									url,
 									success: (res) => {
 										if (res.statusCode != 200) {
-											return uni.showToast({
-												title: '下载安装包失败',
-												icon: 'error',
-												duration: 2000
+											// 提示下载安装包失败
+											this.UPDATE_TIPMODAL({
+												isShow: true,
+												tipText: '下载安装包失败', // 提示信息
+												tipIcon: 'iconshibai', // 图标名称
+												mark: true, // 是否有蒙版
+												duration: 2000, // 持续时间
 											})
+											return
 										}
 										// 安装更新文件
 										plus.runtime.install(res.tempFilePath, {
@@ -1158,8 +1167,6 @@
 				this.showLink = true
 				// this.linkTitle = this.dataList[this.orderIndex]
 			},
-			typing() {},
-			enter() {},
 			onEgg() {}
 		},
 		onUnload() {

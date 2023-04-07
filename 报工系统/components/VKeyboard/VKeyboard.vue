@@ -3,7 +3,7 @@
 		<view class="digit-keyboard" v-if="mode === 'digit' || digital">
 			<view class="digit-button-box">
 				<template v-for="(digit, index) in digits">
-					<view :key="index" class="key-button digit" @tap="typing('.')" v-if="index === 9">.</view>
+					<!-- <view :key="index" class="key-button digit" @tap="typing('.')" v-if="index === 9">.</view> -->
 					<view :key="index" class="key-button digit" @tap="typing(digit)">{{digit}}</view>
 				</template>
 				<view class="key-button digit">
@@ -69,7 +69,6 @@
 				lines: [],						//字母+数字数组
 				lowercase: true,				//是否小写输入状态
 				mode: KEYBOARD_MODE.LETTER,		//键盘模式
-				keys: []						//键入的键值
 			}
 		},
 		methods: {
@@ -93,10 +92,7 @@
 			},
 			//键盘键入
 			typing(input) {
-				this.keys.push(input);
 				//app中v-model不生效，改用事件方式在外处理
-				//this.$emit('typing', this.keys.join(''));
-				
 				this.$emit('typing', {
 					backspace: false,
 					char: input
@@ -104,10 +100,6 @@
 			},
 			//退格键
 			backspace() {
-				if (this.keys.length) {
-					this.keys.pop()
-				}
-				//this.$emit('typing', this.keys.join(''));
 				this.$emit('typing', {
 					backspace: true
 				})
@@ -205,7 +197,7 @@
 				}
 				
 				.special-key {
-					width: 2.6em;
+					width: 5em;
 				}
 			}
 				
@@ -222,7 +214,7 @@
 				}
 				
 				.swith-key {
-					width: 2.6em;
+					width: 5em;
 				}
 				
 				.logo {

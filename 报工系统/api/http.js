@@ -55,17 +55,17 @@ export const myRequest = (options) => {
 							})
 							reject(res)
 						} else {
+							// 关闭提示加载中
+							store._mutations['UPDATE_TIPMODAL'][0]({
+								isShow: false,
+								tipText: '', // 提示信息
+								tipIcon: '', // 图标名称
+								mark: true, // 是否有蒙版
+								duration: 0, // 持续时间
+							})
 							resolve(res)
 						}
 					}
-					// 关闭提示加载中
-					store._mutations['UPDATE_TIPMODAL'][0]({
-						isShow: false,
-						tipText: '', // 提示信息
-						tipIcon: '', // 图标名称
-						mark: true, // 是否有蒙版
-						duration: 0, // 持续时间
-					})
 				},
 				// 这里的接口请求，如果出现问题就输出接口请求失败
 				fail: (err) => {

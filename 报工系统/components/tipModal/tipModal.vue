@@ -75,15 +75,15 @@
 
 		.tipOut {
 			flex-direction: column;
-			width: 25vw;
-			height: 25vw;
+			width: 20vw;
+			height: 20vw;
 			border-radius: 20rpx;
 			background: #000;
 			z-index: 10001;
 			color: #fff;
 
 			i {
-				font-size: 30rpx;
+				font-size: 50rpx;
 				margin-bottom: 20rpx;
 			}
 
