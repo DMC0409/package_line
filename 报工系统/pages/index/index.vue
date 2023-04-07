@@ -4,10 +4,11 @@
 		<!-- 自定义键盘 -->
 		<v-keyboard ref="keyboard" :disorderly="false" @typing="typing" @enter="enter"></v-keyboard>
 		<!-- 人脸识别窗口 -->
-		<checkFace v-if="checkIngFace" @stopCheckFace="stopCheckFace" :dataDetailAllList="dataDetailAllList">
+		<checkFace v-if="checkIngFace" @stopCheckFace="stopCheckFace" @checkSuccess="onSureEdit"
+			:dataDetailAllList="dataDetailAllList">
 		</checkFace>
-		<!-- 遮罩层 -->
-		<view class="mark" v-if="vuex_Requeset"></view>
+		<!-- 自定义提示框 -->
+		<tipModal></tipModal>
 		<!-- 设置wifi -->
 		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 放大查看图片 -->
@@ -430,7 +431,7 @@
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
 
-				checkIngFace: false, // 人脸识别窗口
+				checkIngFace: true, // 人脸识别窗口
 			}
 		},
 		onLoad() {
@@ -460,7 +461,7 @@
 			this.snapshTimeout && clearTimeout(this.snapshTimeout);
 		},
 		computed: {
-			...mapState(['vuex_Wifi', 'vuex_Requeset'])
+			...mapState(['vuex_Wifi'])
 		},
 		watch: {
 			// 每次报工表单修改目标更改就进行工资计算
@@ -919,7 +920,9 @@
 				this.Value = []
 			},
 			// 提交报工信息
-			onSureEdit() {
+			onSureEdit(data) {
+				console.log(data)
+				return
 				// 让员工卡号输入框失焦
 				this.inputIndex = -2
 				// 计算上报工资，以防用户自行虚假填写
@@ -1173,14 +1176,6 @@
 		flex-direction: column;
 		position: relative;
 
-		.mark {
-			position: absolute;
-			width: 100vw;
-			height: 100vh;
-			background: rgba(0, 0, 0, .5);
-			z-index: 999;
-		}
-
 		.data-none {
 			color: #A6C4E6;
 			font-size: 1.5vw;
@@ -1260,6 +1255,10 @@
 							border-bottom: 1rpx solid #68686F;
 							border-right: 1rpx solid #68686F;
 							box-sizing: border-box;
+
+							&:active {
+								background: #00d4d4;
+							}
 
 							image {
 								width: 3vw;
@@ -1546,6 +1545,10 @@
 									border-bottom: 1rpx solid #68686F;
 									border-right: 1rpx solid #68686F;
 									box-sizing: border-box;
+
+									&:active {
+										background: #00d4d4;
+									}
 
 									image {
 										width: 2vw;

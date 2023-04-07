@@ -1,10 +1,10 @@
 <template>
 	<view class="container flex image-back-norepeat align-center"
 		style="background-image: url('../../static/image/page-back.png');">
+		<!-- 自定义提示框 -->
+		<tipModal></tipModal>
 		<!-- 设置wifi -->
 		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
-		<!-- 遮罩层 -->
-		<view class="mark" v-if="vuex_Requeset"></view>
 		<!-- 导航栏 -->
 		<image class="logo" src="../../static/image/logo.png"></image>
 		<!-- 主内容 -->
@@ -20,37 +20,25 @@
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
-					<view :class="{selected:selectedNum=='1'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('1')" @touchend.stop="resetSelect">1
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('1')">1
 					</view>
-					<view :class="{selected:selectedNum=='2'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('2')" @touchend.stop="resetSelect">2</view>
-					<view :class="{selected:selectedNum=='3'}"
-						class="jsq-item flex justify-center align-center border-right-none"
-						@touchstart.stop="onClickDH('3')" @touchend.stop="resetSelect">3</view>
-					<view :class="{selected:selectedNum=='4'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('4')" @touchend.stop="resetSelect">4</view>
-					<view :class="{selected:selectedNum=='5'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('5')" @touchend.stop="resetSelect">5</view>
-					<view :class="{selected:selectedNum=='6'}"
-						class="jsq-item flex justify-center align-center border-right-none"
-						@touchstart.stop="onClickDH('6')" @touchend.stop="resetSelect">6</view>
-					<view :class="{selected:selectedNum=='7'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('7')" @touchend.stop="resetSelect">7</view>
-					<view :class="{selected:selectedNum=='8'}" class="jsq-item flex justify-center align-center"
-						@touchstart.stop="onClickDH('8')" @touchend.stop="resetSelect">8</view>
-					<view :class="{selected:selectedNum=='9'}"
-						class="jsq-item flex justify-center align-center border-right-none"
-						@touchstart.stop="onClickDH('9')" @touchend.stop="resetSelect">9</view>
-					<view :class="{selected:selectedNum=='0'}"
-						class="jsq-item flex justify-center align-center border-bottom-none"
-						@touchstart.stop="onClickDH('0')" @touchend.stop="resetSelect">0</view>
-					<view :class="{selected:selectedNum=='clear'}"
-						class="jsq-item flex justify-center align-center border-bottom-none"
-						@touchstart.stop="onClickDH('clear')" @touchend.stop="resetSelect">清除</view>
-					<view :class="{selected:selectedNum=='del'}"
-						class="jsq-item flex justify-center align-center border-right-none border-bottom-none"
-						@touchstart.stop="onClickDH('del')" @touchend.stop="resetSelect">
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('2')">2</view>
+					<view class="jsq-item flex justify-center align-center border-right-none"
+						@tap.stop="onClickDH('3')">3</view>
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('4')">4</view>
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('5')">5</view>
+					<view class="jsq-item flex justify-center align-center border-right-none"
+						@tap.stop="onClickDH('6')">6</view>
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('7')">7</view>
+					<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('8')">8</view>
+					<view class="jsq-item flex justify-center align-center border-right-none"
+						@tap.stop="onClickDH('9')">9</view>
+					<view class="jsq-item flex justify-center align-center border-bottom-none"
+						@tap.stop="onClickDH('0')">0</view>
+					<view class="jsq-item flex justify-center align-center border-bottom-none"
+						@tap.stop="onClickDH('clear')">清除</view>
+					<view class="jsq-item flex justify-center align-center border-right-none border-bottom-none"
+						@tap.stop="onClickDH('del')">
 						<image src="../../static/image/icon-jsq-close.png"></image>
 					</view>
 				</view>
@@ -74,16 +62,16 @@
 				// 表单结构数据
 				formList: [{
 						label: '系统编号',
-						value: '947535',
+						value: '',
 						focus: false,
 					},
 					{
 						label: 'SOP账户',
-						value: '123456',
+						value: '',
 						focus: false,
 					}, {
 						label: 'SOP密码',
-						value: '654321',
+						value: '',
 						focus: false,
 					},
 				],
@@ -97,16 +85,12 @@
 		components: {
 			wifiModal
 		},
-		onLoad() {
-			// 已登陆过的用户退出系统后将持久化的mySysId回显
-			if (uni.getStorageSync('mySysId')) {
-				this.formList[0].value = uni.getStorageSync('mySysId')
-			}
-		},
+		onLoad() {},
 		computed: {
-			...mapState(['vuex_Requeset','vuex_Wifi'])
+			...mapState(['vuex_Wifi'])
 		},
 		methods: {
+			...mapMutations(['UPDATE_TIPMODAL']),
 			// 迷你数字键盘
 			onClickDH(num) {
 				this.selectedNum = num
@@ -123,10 +107,13 @@
 						this.currentValue.push(num)
 						this.$set(this.formList[this.currentIndex], 'value', this.currentValue.join(''))
 					} else {
-						uni.showToast({
-							icon: 'error',
-							title: '超出可输入长度',
-							duration: 2000
+						// 提示超出可输入长度
+						this.UPDATE_TIPMODAL({
+							isShow: true,
+							tipText: '超出可输入长度', // 提示信息
+							tipIcon: 'iconshibai', // 图标名称
+							mark: true, // 是否有蒙版
+							duration: 2000, // 持续时间
 						})
 					}
 				}
@@ -137,11 +124,15 @@
 			handleLogin() {
 				for (let i of this.formList) {
 					if (i.value == '') {
-						return uni.showToast({
-							icon: 'error',
-							title: '请输入信息',
-							duration: 2000
+						// 提示登陆成功
+						this.UPDATE_TIPMODAL({
+							isShow: true,
+							tipText: '请输入信息', // 提示信息
+							tipIcon: 'iconshibai', // 图标名称
+							mark: true, // 是否有蒙版
+							duration: 2000, // 持续时间
 						})
+						return
 					}
 				}
 				// // 若wifi未连接，则弹窗请用户连接网络
@@ -159,7 +150,7 @@
 					}
 				}).then(res => {
 					// EPC登陆
-					this.$api({
+					return this.$api({
 						url: '/api/data.php',
 						method: 'post',
 						data: {
@@ -169,21 +160,24 @@
 							sop_equipment_account: this.formList[1].value,
 							sop_equipment_password: this.formList[2].value
 						}
-					}).then((res) => {
-						uni.showToast({
-							icon: 'success',
-							title: '登陆成功',
-							duration: 2000
-						})
-						// 登陆凭证持久化
-						uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
-						uni.setStorageSync('mySysId', this.formList[0].value)
-						// 跳转至报单页面
-						uni.reLaunch({
-							url: '../index/index'
-						})
-					}, () => {}).catch(() => {})
-				}, () => {}).catch(() => {})
+					})
+				}).then((res) => {
+					// 提示登陆成功
+					this.UPDATE_TIPMODAL({
+						isShow: true,
+						tipText: '登陆成功', // 提示信息
+						tipIcon: 'iconchenggong', // 图标名称
+						mark: true, // 是否有蒙版
+						duration: 1000, // 持续时间
+					})
+					// 登陆凭证持久化
+					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
+					uni.setStorageSync('mySysId', this.formList[0].value)
+					// 跳转至报单页面
+					uni.reLaunch({
+						url: '../index/index'
+					})
+				}).catch(() => {})
 			}
 		}
 	}
@@ -194,14 +188,6 @@
 		height: 100vh;
 		flex-direction: column;
 		position: relative;
-
-		.mark {
-			position: absolute;
-			width: 100vw;
-			height: 100vh;
-			background: rgba(0, 0, 0, .5);
-			z-index: 999;
-		}
 
 		.logo {
 			width: 10vw;
@@ -277,10 +263,10 @@
 						border-bottom: 1rpx solid #68686F;
 						border-right: 1rpx solid #68686F;
 						box-sizing: border-box;
-					}
 
-					.selected {
-						background: #00d4d4;
+						&:active {
+							background: #00d4d4;
+						}
 					}
 
 					image {

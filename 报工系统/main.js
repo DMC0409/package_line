@@ -13,13 +13,16 @@ import {
 } from './api/http.js';
 // 引入工具
 import utils from './utils/index.js'
+// 引入自定义弹窗
+import tipModal from '@/components/tipModal/tipModal.vue'
 
 Vue.prototype.$api = myRequest
 Vue.prototype.$utils = utils
+Vue.component('tip-modal', tipModal)
 
 import moment from 'moment'; //导入模块
 moment.locale('zh-cn'); //设置语言 或 moment.lang('zh-cn'); 
-Vue.prototype.$moment = moment;//赋值使用
+Vue.prototype.$moment = moment; //赋值使用
 
 try {
 	function isPromise(obj) {

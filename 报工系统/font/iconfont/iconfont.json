@@ -6,6 +6,27 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "851467",
+      "name": "loading",
+      "font_class": "loading",
+      "unicode": "e6a6",
+      "unicode_decimal": 59046
+    },
+    {
+      "icon_id": "11372757",
+      "name": "成功",
+      "font_class": "chenggong",
+      "unicode": "e8c3",
+      "unicode_decimal": 59587
+    },
+    {
+      "icon_id": "11372770",
+      "name": "失败",
+      "font_class": "shibai",
+      "unicode": "e8c5",
+      "unicode_decimal": 59589
+    },
+    {
       "icon_id": "603298",
       "name": "向上-排序",
       "font_class": "xiangshangpaixu-copy",

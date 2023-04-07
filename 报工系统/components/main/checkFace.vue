@@ -3,6 +3,9 @@
 </template>
 
 <script>
+	import {
+		mapMutations
+	} from 'vuex'
 	// 直播流查看权限
 	import permission from '../../utils/permission.js'
 	export default {
@@ -14,7 +17,6 @@
 				snapshTimeout: null,
 				uploadFileTask: null,
 				faceCheckNum: 0,
-				currentWebview: null,
 
 				screamWidth: 0,
 				screamHeight: 0,
@@ -22,6 +24,7 @@
 		},
 		props: ['dataDetailAllList'],
 		mounted() {
+			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
 			// 获取屏幕宽高
 			let that = this
 			uni.getSystemInfo({
@@ -33,90 +36,88 @@
 			});
 		},
 		methods: {
+			...mapMutations(['UPDATE_TIPMODAL']),
 			//初始化
 			faceInit() {
-				//显示加载框
-				uni.showLoading({
-					title: '加载中'
-				});
-				this.faceCheckNum = 0
-				this.faceInitTimeout = setTimeout(async () => {
-					//创建livepusher
-					if (uni.getSystemInfoSync().platform === 'android') {
-						const data1 = await permission.requestAndroidPermission(
-							"android.permission.RECORD_AUDIO")
-						const data2 = await permission.requestAndroidPermission("android.permission.CAMERA")
-						if (data1 == 1 && data2 == 1) {
-							this.pusherInit();
-						}
-					} else {
-						this.pusherInit();
-					}
-					//隐藏加载框
-					uni.hideLoading();
-					// 覆盖在视频之上的内容，根据实际情况编写
-					// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
-					// this.scanWin = plus.webview.create('/static/456.html', '', {
-					//  background: 'transparent'
-					// });
-					// //新引入的webView显示
-					// this.scanWin.show();
-				}, 2000);
+				// 提示加载中
+				this.UPDATE_TIPMODAL({
+					isShow: true,
+					tipText: '加载中', // 提示信息
+					tipIcon: 'iconloading', // 图标名称
+					mark: false, // 是否有蒙版
+					duration: 0, // 持续时间
+				})
+				// this.faceCheckNum = 0
+				// this.faceInitTimeout = setTimeout(async () => {
+				// 	//创建livepusher
+				// 	if (uni.getSystemInfoSync().platform === 'android') {
+				// 		const data1 = await permission.requestAndroidPermission(
+				// 			"android.permission.RECORD_AUDIO")
+				// 		const data2 = await permission.requestAndroidPermission("android.permission.CAMERA")
+				// 		if (data1 == 1 && data2 == 1) {
+				// 			this.pusherInit();
+				// 		}
+				// 	} else {
+				// 		this.pusherInit();
+				// 	}
+				// 	// 覆盖在视频之上的内容，根据实际情况编写
+				// 	// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
+				// 	// this.scanWin = plus.webview.create('/static/456.html', '', {
+				// 	//  background: 'transparent'
+				// 	// });
+				// 	// //新引入的webView显示
+				// 	// this.scanWin.show();
+				// }, 2000);
 			},
 			//初始化播放器
 			pusherInit() {
 				// 获取当前窗口
-				this.currentWebview = this.$mp.page.$getAppWebview()
+				const currentWebview = this.$mp.page.$getAppWebview()
 				// 创建推流，url不填写代表不上传
 				this.pusher = plus.video.createLivePusher('livepusher', {
 					url: '',
 					top: '0',
-					// left:'0',
-					left: this.screamWidth / 2 - this.screamHeight / 16 * 12 / 2 + 'px',
-					width: this.screamHeight / 16 * 12 + 'px',
-					height: this.screamHeight + 'px',
+					left: '0',
+					// left: this.screamWidth / 2 - this.screamHeight / 4 * 4 / 2 + 'px',
+					width: this.screamHeight + 'px',
+					height: this.screamWidth + 'px',
 					mode: 'FHD',
 					// width: '100%',
 					// height: '100%',
-					aspect: '9:16',
+					aspect: '3:4',
 					muted: true,
-					videoFullscreen: 'landscape-primary'
 				});
-
 				// 将推流对象加到当前页面中
-				this.currentWebview.append(this.pusher);
+				currentWebview.append(this.pusher);
 				//反转摄像头
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
-				this.pusher.requestFullScreen({
-					success: res => {
-						console.log('我要执行了');
-					},
-					fail: res => {
-						console.log('fullscreen fail');
-					},
-					direction: 90
-				});
 				this.snapshotPusher()
 			},
 			//快照
 			snapshotPusher() {
 				if (this.faceCheckNum > 1) {
-					uni.showToast({
-						title: '对比超时',
-						icon: 'error',
-						duration: 2000
+					// 提示对比超时
+					this.UPDATE_TIPMODAL({
+						isShow: true,
+						tipText: '对比超时', // 提示信息
+						tipIcon: 'iconshibai', // 图标名称
+						mark: false, // 是否有蒙版
+						duration: 2000, // 持续时间
 					})
-					// // 关闭直播流
-					// this.pusher.close()
-					// this.$emit('stopCheckFace')
+					this.pusher.close() // 关闭直播流
+					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
+					plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
 
 				} else {
-					uni.showToast({
-						icon: 'none',
-						title: '识别中...',
-						duration: 2000
+					// 提示加载中
+					this.UPDATE_TIPMODAL({
+						isShow: true,
+						tipText: '识别中...', // 提示信息
+						tipIcon: '', // 图标名称
+						mark: false, // 是否有蒙版
+						duration: 2000, // 持续时间
 					})
 					this.snapshTimeout = setTimeout(() => {
 						this.faceCheckNum++
@@ -149,13 +150,13 @@
 						var reader = new plus.io.FileReader();
 						reader.onloadend = res => {
 							//获取图片base64	
-							console.log(res.target.result)
+							// console.log(res.target.result.split(',')[1])
 							uni.request({
 								url: 'https://aip.baidubce.com/rest/2.0/face/v3/search?access_token=' +
 									this.dataDetailAllList.subToken, //接口地址：前缀+方法中传入的地址
 								method: 'POST', //请求方法：传入的方法或者默认是“GET”
 								data: {
-									image: res.target.result,
+									image: res.target.result.split(',')[1],
 									image_type: 'BASE64',
 									group_id_list: uni.getStorageSync('mySysId')
 								},
@@ -165,44 +166,39 @@
 								success: (res) => {
 									console.log(res)
 									if (res.data.error_msg == "pic not has face") {
-										uni.showToast({
-											title: '未捕获到人脸',
-											icon: 'error',
-											duration: 2000
+										// 提示未捕获到人脸
+										this.UPDATE_TIPMODAL({
+											isShow: true,
+											tipText: '未捕获到人脸', // 提示信息
+											tipIcon: 'iconshibai', // 图标名称
+											mark: false, // 是否有蒙版
+											duration: 2000, // 持续时间
 										})
 										this.snapshotPusher()
 									}
-									if (res.data.error_msg == "image check fail") {
-										this.snapshotPusher()
-									}
 									if (res.data.error_msg == 'SUCCESS') {
-										if (res.data.result.user_list[0].score > 80) {
-											if (res.data.result.user_list[0].user_id != this
-												.dataDetailAllList
-												.userInfo.info_userid) {
-												uni.showModal({
-													title: '失败',
-													content: '您的脸型不正确',
-													showCancel: false,
-													success(res) {}
-												});
-											} else {
-												uni.showModal({
-													title: 'OK',
-													content: '人脸识别成功',
-													showCancel: false,
-													success(res) {
-														this.onSureEdit()
-													}
-												});
-											}
+										if (res.data.result.user_list[0] && res.data.result.user_list[
+												0].score > 80) {
+											// 提示
+
+											this.$emit(
+													'checkSuccess', res.data.result.user_list[0]
+													) // 调用父组件方法提交报工信息
+											this.pusher.close() // 关闭直播流
+											this.$emit(
+												'stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
+											plus.screen.lockOrientation(
+												'landscape-primary'); //锁定屏幕为横屏
+
 										} else {
-											uni.showModal({
-												title: '错误',
-												content: '对比失败',
-												showCancel: false,
-												success(res) {}
-											});
+											// 提示对比失败
+											this.UPDATE_TIPMODAL({
+												isShow: true,
+												tipText: '对比失败', // 提示信息
+												tipIcon: 'iconshibai', // 图标名称
+												mark: false, // 是否有蒙版
+												duration: 2000, // 持续时间
+											})
 										}
 									}
 								},

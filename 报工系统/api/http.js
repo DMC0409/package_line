@@ -11,12 +11,14 @@ export const myRequest = (options) => {
 		console.log('send data:', options.data)
 		// 访问wifi是否在线或者系统未登录时访问wifi是否在线，则显示loading
 		if (options.data.need_type != 'checkNetOnLineFun' || !uni.getStorageSync('mySysId')) {
-			//显示加载框
-			uni.showLoading({
-				title: '加载中'
-			});
-			// 显示遮罩层
-			store._mutations['UPDATE_REQUEST'][0](true)
+			// 提示加载中
+			store._mutations['UPDATE_TIPMODAL'][0]({
+				isShow: true,
+				tipText: '加载中', // 提示信息
+				tipIcon: 'iconloading', // 图标名称
+				mark: true, // 是否有蒙版
+				duration: 0, // 持续时间
+			})
 		}
 		TIME = setTimeout(() => {
 			uni.request({
@@ -30,45 +32,54 @@ export const myRequest = (options) => {
 					// 清除计时器
 					clearTimeout(TIME)
 					console.log('响应成功', res)
-					//隐藏加载框
-					uni.hideLoading();
-					// 关闭遮罩层
-					store._mutations['UPDATE_REQUEST'][0](false)
-					//返回的数据（不固定，看后端接口，这里是做了一个判断，如果不为true，用uni.showToast方法提示获取数据失败)
+					//返回的数据（不固定，看后端接口，这里是做了一个判断，如果不为true，提示获取数据失败)
 					if (typeof(res.data) != 'object') {
-						uni.showToast({
-							title: '网络接口错误',
-							icon: 'error',
-							duration: 2000
+						// 提示网络接口错误
+						store._mutations['UPDATE_TIPMODAL'][0]({
+							isShow: true,
+							tipText: '网络接口错误', // 提示信息
+							tipIcon: 'iconshibai', // 图标名称
+							mark: true, // 是否有蒙版
+							duration: 2000, // 持续时间
 						})
 						reject(res)
 					} else if (typeof(res.data) == 'object') {
 						if (res.data.sign != 1) {
-							uni.showToast({
-								title: res.data.info,
-								icon: 'error',
-								duration: 2000
+							// 错误提示
+							store._mutations['UPDATE_TIPMODAL'][0]({
+								isShow: true,
+								tipText: res.data.info, // 提示信息
+								tipIcon: 'iconshibai', // 图标名称
+								mark: true, // 是否有蒙版
+								duration: 2000, // 持续时间
 							})
 							reject(res)
 						} else {
 							resolve(res)
 						}
 					}
+					// 关闭提示加载中
+					store._mutations['UPDATE_TIPMODAL'][0]({
+						isShow: false,
+						tipText: '', // 提示信息
+						tipIcon: '', // 图标名称
+						mark: true, // 是否有蒙版
+						duration: 0, // 持续时间
+					})
 				},
 				// 这里的接口请求，如果出现问题就输出接口请求失败
 				fail: (err) => {
 					console.log(err)
 					// 清除计时器
 					clearTimeout(TIME)
-					uni.showToast({
-						title: '请检查网络连接',
-						icon: 'error',
-						duration: 2000
+					// 提示网络接口错误
+					store._mutations['UPDATE_TIPMODAL'][0]({
+						isShow: true,
+						tipText: '网络接口错误', // 提示信息
+						tipIcon: 'iconshibai', // 图标名称
+						mark: true, // 是否有蒙版
+						duration: 2000, // 持续时间
 					})
-					//隐藏加载框
-					uni.hideLoading();
-					// 关闭遮罩层
-					store._mutations['UPDATE_REQUEST'][0](false)
 					reject(err)
 				}
 			})
