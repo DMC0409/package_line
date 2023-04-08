@@ -183,7 +183,7 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scopeds>
 	.container {
 		height: 100vh;
 		flex-direction: column;

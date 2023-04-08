@@ -187,7 +187,7 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	.wifiOut {
 		width: 100vw;
 		height: 100vh;

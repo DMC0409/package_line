@@ -11,6 +11,11 @@
 		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 放大查看图片 -->
 		<previewImage ref="previewImage" :opacity="1" :saveBtn="false" :circular="true" />
+		<!-- 调试信息查看窗口 -->
+		<consoleView v-if="consoleContent" @closeConsole="consoleContent = false"></consoleView>
+		<view class="switch flex align-center justify-center" v-if="isConsole" @click="toOpenConsole">
+			调试
+		</view>
 		<!-- 确认结束环节弹窗 -->
 		<info-sure-modal :showLink.sync="showLink" :rowData="rowData" :orderId="orderDetail.order_id"
 			:configTableId="tableInfoLink.config_table_id_main" :title="linkTitle" />
@@ -21,6 +26,9 @@
 				<view class="set-btn-div flex justify-around">
 					<view class="set-btn" @click.stop="onInitSet">
 						初始化设定
+					</view>
+					<view class="set-btn" @click.stop="toConsole">
+						开启/关闭调试
 					</view>
 				</view>
 			</view>
@@ -354,6 +362,8 @@
 	import wifiModal from '../../components/main/wifiModel.vue'
 	// 人脸识别窗口
 	import checkFace from '../../components/main/checkFace.vue'
+	// 调试窗口
+	import consoleView from '../../components/main/consoleView.vue'
 	import {
 		mapState,
 		mapMutations
@@ -363,7 +373,8 @@
 			previewImage,
 			infoSureModal,
 			wifiModal,
-			checkFace
+			checkFace,
+			consoleView
 		},
 		data() {
 			return {
@@ -373,6 +384,9 @@
 				week: '', //当前星期
 
 				settingWifi: false, // 是否正在设置wifi
+
+				isConsole: false, // 是否是调试模式
+				consoleContent: false, // 是否打开调试窗口
 
 				showSetting: false,
 				showShiGongDH: true,
@@ -476,8 +490,8 @@
 					}
 				}
 			},
-			vuex_Wifi(newVal,oldVal){
-				if(newVal){
+			vuex_Wifi(newVal, oldVal) {
+				if (newVal) {
 					// 网络一旦连接则获取报工表格
 					this.getPackTable()
 				}
@@ -1060,6 +1074,14 @@
 					url: '../login/login'
 				})
 			},
+			// 开启/关闭调试模式
+			toConsole() {
+				this.isConsole = !this.isConsole
+				this.showSetting = false
+			},
+			toOpenConsole() {
+				this.consoleContent = true
+			},
 			// 检查版本信息
 			checkVersion() {
 				this.$api({
@@ -1175,13 +1197,24 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	.container {
 		width: 100vw;
 		height: 100vh;
 		// padding-top: 5vh;
 		flex-direction: column;
 		position: relative;
+
+		.switch {
+			width: 5vw;
+			height: 5vw;
+			border-radius: 50%;
+			background: red;
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			z-index: 998;
+		}
 
 		.data-none {
 			color: #A6C4E6;

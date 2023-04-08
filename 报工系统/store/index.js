@@ -11,7 +11,8 @@ const store = new Vuex.Store({
 			tipIcon: '', // 图标名称
 			mark: true, // 是否有蒙版
 			duration: -1, // 持续时间
-		}
+		},
+		vuex_Console: []
 	},
 	mutations: {
 		// 更新wifi状态
@@ -22,6 +23,10 @@ const store = new Vuex.Store({
 		UPDATE_TIPMODAL(state, data) {
 			state.vuex_TipModal = data
 		},
+		// 更新控制台信息
+		UPDATE_CONSOLE(state, data) {
+			state.vuex_Console = data
+		}
 	}
 })
 export default store

@@ -8,6 +8,10 @@ export const myRequest = (options) => {
 	return new Promise((resolve, reject) => {
 		// 统一添加访问标识
 		options.data.isSopRequest = '1'
+		// // 打印调试信息
+		// let nowConsole = JSON.parse(JSON.stringify(store.state.vuex_Console))
+		// nowConsole.push(options.data)
+		// store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 		console.log('send data:', options.data)
 		// 访问wifi是否在线或者系统未登录时访问wifi是否在线，则显示loading
 		if (options.data.need_type != 'checkNetOnLineFun' || !uni.getStorageSync('mySysId')) {
@@ -31,6 +35,10 @@ export const myRequest = (options) => {
 				success: (res) => {
 					// 清除计时器
 					clearTimeout(TIME)
+					// 打印调试信息
+					let nowConsole = JSON.parse(JSON.stringify(store.state.vuex_Console))
+					nowConsole.push(JSON.stringify(res))
+					store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 					console.log('响应成功', res)
 					//返回的数据（不固定，看后端接口，这里是做了一个判断，如果不为true，提示获取数据失败)
 					if (typeof(res.data) != 'object') {
@@ -70,12 +78,16 @@ export const myRequest = (options) => {
 				// 这里的接口请求，如果出现问题就输出接口请求失败
 				fail: (err) => {
 					console.log(err)
+					// 打印调试信息
+					let nowConsole = JSON.parse(JSON.stringify(store.state.vuex_Console))
+					nowConsole.push(JSON.stringify(err))
+					store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 					// 清除计时器
 					clearTimeout(TIME)
-					// 提示网络接口错误
+					// 提示未打开wifi
 					store._mutations['UPDATE_TIPMODAL'][0]({
 						isShow: true,
-						tipText: '网络接口错误', // 提示信息
+						tipText: '未打开wifi', // 提示信息
 						tipIcon: 'iconshibai', // 图标名称
 						mark: true, // 是否有蒙版
 						duration: 2000, // 持续时间
