@@ -390,7 +390,7 @@
 
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '',
+				shigongDH2: '230202002',
 				getFocus: true,
 
 				orderDetail: {
@@ -458,7 +458,7 @@
 			// 每小时获取一次版本信息
 			this.versionTimer = setInterval(() => {
 				this.checkVersion()
-			}, 60 * 60 * 1000)
+			}, 5 * 60 * 1000)
 			// 获取APP版本信息
 			// #ifdef APP-PLUS
 			plus.runtime.getProperty(plus.runtime.appid, (wgtinfo) => {
@@ -689,14 +689,15 @@
 			},
 			// 打开施工单号输入框
 			onSetReCode() {
-				// 清空施工单号
-				this.shigongDH2 = ''
-				// 重置报工步骤选中下标
-				this.stepsIndex = -1
-				// 清空订单信息编号
-				this.orderDetail.order_id = ''
-				// 显示输入施工单号弹窗
-				this.showShiGongDH = true
+				this.checkIngFace = true
+				// // 清空施工单号
+				// this.shigongDH2 = ''
+				// // 重置报工步骤选中下标
+				// this.stepsIndex = -1
+				// // 清空订单信息编号
+				// this.orderDetail.order_id = ''
+				// // 显示输入施工单号弹窗
+				// this.showShiGongDH = true
 			},
 			// 确认施工单号输入框
 			onInputSure() {
@@ -1039,7 +1040,19 @@
 			},
 			// 进行人脸识别
 			toCheckFace() {
-				this.checkIngFace = true
+				// 获取百度token才可进行人脸识别
+				if(this.dataDetailAllList.subToken){
+					this.checkIngFace = true
+				}else{
+					// 提示未获取报工信息
+					this.UPDATE_TIPMODAL({
+						isShow: true,
+						tipText: '未获取报工信息', // 提示信息
+						tipIcon: 'iconshibai', // 图标名称
+						mark: true, // 是否有蒙版
+						duration: 2000, // 持续时间
+					})
+				}
 			},
 			stopCheckFace() {
 				this.checkIngFace = false

@@ -51,11 +51,14 @@
 					}
 					// 覆盖在视频之上的内容，根据实际情况编写
 					// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
-					// this.scanWin = plus.webview.create('/static/456.html', '', {
-					//  background: 'transparent'
-					// });
-					// //新引入的webView显示
-					// this.scanWin.show();
+					this.scanWin = plus.webview.create('/static/face.html?msgType=1', '', {
+						background: 'transparent',
+						videoFullscreen:'landscape-secondary'
+					});
+					//新引入的webView显示
+					this.scanWin.show();
+					// //新引入的webView影藏
+					// this.scanWin.hide();
 				}, 2000);
 			},
 			//初始化播放器
@@ -79,7 +82,8 @@
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
-				this.snapshotPusher()
+				// this.snapshotPusher()
+				
 			},
 			//快照
 			snapshotPusher() {

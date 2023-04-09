@@ -30,12 +30,12 @@
 		computed: {
 			...mapState(['vuex_Console'])
 		},
-		methods:{
+		methods: {
 			...mapMutations(['UPDATE_CONSOLE']),
-			clear(){
+			clear() {
 				this.UPDATE_CONSOLE([])
 			},
-			back(){
+			back() {
 				this.$emit('closeConsole')
 			}
 		}
@@ -51,26 +51,34 @@
 		top: 0;
 		left: 0;
 		z-index: 999;
-		.contentOut{
+
+		.contentOut {
 			width: 100%;
 			height: 90%;
 			overflow: auto;
-			.eachRes{
+
+			.eachRes {
+				width: 100%;
 				padding: 10rpx 0;
 				border-bottom: 1px solid #ccc;
+				word-wrap: break-word;
+				word-break: break-all;
 			}
 		}
+
 		.operate {
 			width: 100%;
 			height: 10%;
-			.btn{
+
+			.btn {
 				width: 10vw;
 				height: 100%;
 				background: #666;
 				border-radius: 10rpx;
 				color: #fff;
 			}
-			.red{
+
+			.red {
 				background: red;
 			}
 		}
