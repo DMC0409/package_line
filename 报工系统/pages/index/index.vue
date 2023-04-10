@@ -390,7 +390,7 @@
 
 				showSetting: false,
 				showShiGongDH: true,
-				shigongDH2: '230202002',
+				shigongDH2: '',
 				getFocus: true,
 
 				orderDetail: {
@@ -491,6 +491,7 @@
 				}
 			},
 			vuex_Wifi(newVal, oldVal) {
+				console.log(newVal)
 				if (newVal) {
 					// 网络一旦连接则获取报工表格
 					this.getPackTable()
