@@ -86,7 +86,7 @@
 					<view class="detail-con-out flex">
 						<view class="detail-con-left flex">
 							<view style="height:90%;overflow: auto;">
-								<view>
+								<view class="left-item-top">
 									订单需要：
 									{{dataDetailAllList.yieldInfo.all.num ||0}}，
 									已经报工：
@@ -525,13 +525,6 @@
 					}
 				}).then(res => {
 					this.stepsList = res.data.data.tableList
-				}, (res) => {
-					if (res.data.sign == -99) {
-						// 跳转至登录页面
-						return uni.reLaunch({
-							url: '../login/login'
-						})
-					}
 				}).catch(err => {
 					console.log(err)
 				})
@@ -689,15 +682,14 @@
 			},
 			// 打开施工单号输入框
 			onSetReCode() {
-				this.checkIngFace = true
-				// // 清空施工单号
-				// this.shigongDH2 = ''
-				// // 重置报工步骤选中下标
-				// this.stepsIndex = -1
-				// // 清空订单信息编号
-				// this.orderDetail.order_id = ''
-				// // 显示输入施工单号弹窗
-				// this.showShiGongDH = true
+				// 清空施工单号
+				this.shigongDH2 = ''
+				// 重置报工步骤选中下标
+				this.stepsIndex = -1
+				// 清空订单信息编号
+				this.orderDetail.order_id = ''
+				// 显示输入施工单号弹窗
+				this.showShiGongDH = true
 			},
 			// 确认施工单号输入框
 			onInputSure() {
@@ -1041,9 +1033,9 @@
 			// 进行人脸识别
 			toCheckFace() {
 				// 获取百度token才可进行人脸识别
-				if(this.dataDetailAllList.subToken){
+				if (this.dataDetailAllList.subToken) {
 					this.checkIngFace = true
-				}else{
+				} else {
 					// 提示未获取报工信息
 					this.UPDATE_TIPMODAL({
 						isShow: true,
@@ -1493,11 +1485,15 @@
 							font-size: 1.5vw;
 							// font-weight: bold;
 							// padding: 15rpx 0 0 14rpx;
-							padding: 3vh 0 0 3vh;
+							border-bottom: 1rpx solid #68686F;
+							padding: 3vh 0 0 0;
 							position: relative;
-
+							box-sizing: border-box;
+							.left-item-top{
+								margin: 3vh;
+							}
 							.left-item {
-								margin: 3vh 0;
+								margin: 3vh;
 
 								.eachInput {
 									width: 17vw;

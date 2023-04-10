@@ -1,7 +1,7 @@
 <template>
 	<view class="outBorder flex align-center justify-center" v-if="vuex_TipModal.isShow">
 		<view class="mark" v-show="vuex_TipModal.mark"></view>
-		<view class="tipOut flex align-center justify-center">
+		<view class="tipOut flex align-center justify-center" :class="vuex_TipModal.turnRotate?'turnRotate':''">
 			<i v-show="vuex_TipModal.tipIcon!=''" class="iconfont"
 				:class="vuex_TipModal.tipIcon=='iconloading'?'turnRound iconloading':vuex_TipModal.tipIcon"></i>
 			<view>{{vuex_TipModal.tipText}}</view>
@@ -90,6 +90,9 @@
 			.turnRound {
 				animation: fadenum 3s infinite;
 			}
+		}
+		.turnRotate{
+			transform: rotate(90deg);
 		}
 	}
 </style>

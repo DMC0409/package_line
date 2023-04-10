@@ -5,40 +5,61 @@
 		<title></title>
 		<style type="text/css">
 			#content {
-				background: #ccc;
-				transform: rotate(90deg);
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				.tipOut{
-					width: 200px;
-					height: 200px;
-					background: rgba(0,0,0,.5);
-				}
+			}
+
+			#content #tipOut {
+				width: 200px;
+				height: 100px;
+				background: rgba(0, 0, 0, 0.7);
+				transform: rotate(90deg);
+				font-size: 30px;
+				color: #fff;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 10px;
 			}
 		</style>
 	</head>
 	<body>
 		<div id="content">
-			<div class="tipOut">
-				123
-			</div>
+			<div id="tipOut"></div>
 		</div>
 		<script type="text/javascript">
 			var DOMcontent = document.getElementById("content")
-			DOMcontent.style.width=window.innerWidth+'px';
-			DOMcontent.style.height=window.innerHeight +'px';
-			var msgType = getQuery('msgType')//获取 uni-app 传来的值//取url中的参数值
-			
+			var TIP = document.getElementById("tipOut")
+			var msgType = getQuery('msgType') //获取 uni-app 传来的值//取url中的参数值
+			var screenWidth = getQuery('width')
+			var screenHeight = getQuery('height')
+			// console.log(screenWidth)
+			// console.log(screenHeight)
+			console.log(msgType)
+			DOMcontent.style.width = screenHeight * 1.8 + 'px';
+			DOMcontent.style.height = screenWidth * 1.8 + 'px';
+			switch (msgType) {
+				case '1':
+					TIP.innerHTML = '识别中'
+					break;
+				case '2':
+					TIP.innerHTML = '未捕获到人脸'
+					break;
+				case '3':
+					TIP.innerHTML = '对比失败'
+					break;	
+			}
+
 			function getQuery(name) {
-			    // 正则：[找寻'&' + 'url参数名字' = '值' + '&']（'&'可以不存在）
-			    let reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
-			    let r = window.location.search.substr(1).match(reg);
-			    if(r != null) {
-			        // 对参数值进行解码
-			        return decodeURIComponent(r[2]);
-			    }
-			    return null;
+				// 正则：[找寻'&' + 'url参数名字' = '值' + '&']（'&'可以不存在）
+				let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+				let r = window.location.search.substr(1).match(reg);
+				if (r != null) {
+					// 对参数值进行解码
+					return decodeURIComponent(r[2]);
+				}
+				return null;
 			}
 		</script>
 	</body>

@@ -17,25 +17,49 @@
 				snapshTimeout: null,
 				uploadFileTask: null,
 				faceCheckNum: 0,
+
+				screenWidth: 0,
+				screenHeight: 0
 			}
 		},
 		props: ['dataDetailAllList'],
 		mounted() {
+			let that = this
+			uni.getSystemInfo({
+				success: function(res) {
+					that.screenWidth = res.screenWidth
+					that.screenHeight = res.screenHeight
+				}
+			});
 			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
 			this.faceInit()
 		},
 		methods: {
 			...mapMutations(['UPDATE_TIPMODAL']),
+			
+			// 自定义提示信息未成功，主要原因，无法关闭显示窗口
+			
+			// // 提示层信息
+			// tipOper(type) {
+			// 	// 覆盖在视频之上的内容，根据实际情况编写
+			// 	// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
+			// 	this.scanWin = plus.webview.create('/static/face.html?msgType=' + type + '&width=' + this
+			// 		.screenWidth +
+			// 		'&height=' + this.screenHeight, '', {
+			// 			background: 'transparent',
+			// 			videoFullscreen: 'landscape-secondary'
+			// 		});
+			// 	//新引入的webView显示
+			// 	this.scanWin.show();
+			// },
+			// hideTip() {
+			// 	let page = plus.webview.getTopWebview();
+			// 	console.log('page------',page)
+			// 	//新引入的webView隐藏
+			// 	this.scanWin.hide(page.id);
+			// },
 			//初始化
 			faceInit() {
-				// 提示加载中
-				this.UPDATE_TIPMODAL({
-					isShow: true,
-					tipText: '加载中', // 提示信息
-					tipIcon: 'iconloading', // 图标名称
-					mark: false, // 是否有蒙版
-					duration: 0, // 持续时间
-				})
 				this.faceCheckNum = 0
 				this.faceInitTimeout = setTimeout(async () => {
 					//创建livepusher
@@ -49,16 +73,6 @@
 					} else {
 						this.pusherInit();
 					}
-					// 覆盖在视频之上的内容，根据实际情况编写
-					// 利用plus.webview.create将扫描框页面及扫描动画（xxx.html）覆盖在视频之上；
-					this.scanWin = plus.webview.create('/static/face.html?msgType=1', '', {
-						background: 'transparent',
-						videoFullscreen:'landscape-secondary'
-					});
-					//新引入的webView显示
-					this.scanWin.show();
-					// //新引入的webView影藏
-					// this.scanWin.hide();
 				}, 2000);
 			},
 			//初始化播放器
@@ -82,12 +96,14 @@
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
-				// this.snapshotPusher()
-				
+				this.snapshotPusher()
 			},
 			//快照
 			snapshotPusher() {
 				if (this.faceCheckNum > 2) {
+					this.pusher.close() // 关闭直播流
+					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
+					plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
 					// 提示对比超时
 					this.UPDATE_TIPMODAL({
 						isShow: true,
@@ -96,21 +112,14 @@
 						mark: false, // 是否有蒙版
 						duration: 2000, // 持续时间
 					})
-					this.pusher.close() // 关闭直播流
-					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
-					plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
-
 				} else {
-					// 提示加载中
-					this.UPDATE_TIPMODAL({
-						isShow: true,
-						tipText: '识别中...', // 提示信息
-						tipIcon: '', // 图标名称
-						mark: false, // 是否有蒙版
-						duration: 2000, // 持续时间
-					})
 					this.snapshTimeout = setTimeout(() => {
 						this.faceCheckNum++
+						// 提示识别中
+						// this.tipOper('1')
+						uni.showLoading({
+							title: ''
+						});
 						this.pusher.snapshot(
 							e => {
 								//拿到本地文件路径
@@ -155,28 +164,22 @@
 								},
 								success: (res) => {
 									console.log(res)
+									uni.hideLoading()
 									if (res.data.error_msg == "pic not has face") {
 										// 提示未捕获到人脸
-										this.UPDATE_TIPMODAL({
-											isShow: true,
-											tipText: '未捕获到人脸', // 提示信息
-											tipIcon: 'iconshibai', // 图标名称
-											mark: false, // 是否有蒙版
-											duration: 2000, // 持续时间
-										})
+										// this.UPDATE_TIPMODAL({
+										// 	isShow: true,
+										// 	tipText: '未捕获到人脸', // 提示信息
+										// 	tipIcon: 'iconshibai', // 图标名称
+										// 	mark: false, // 是否有蒙版
+										// 	duration: 2000, // 持续时间
+										// })
+										// this.tipOper('2')
 										this.snapshotPusher()
 									}
 									if (res.data.error_msg == 'SUCCESS') {
 										if (res.data.result.user_list[0] && res.data.result.user_list[
 												0].score > 80) {
-											// 提示人脸识别成功
-											this.UPDATE_TIPMODAL({
-												isShow: true,
-												tipText: '人脸识别成功', // 提示信息
-												tipIcon: 'iconchenggong', // 图标名称
-												mark: false, // 是否有蒙版
-												duration: 2000, // 持续时间
-											})
 											this.$emit(
 												'checkSuccess', res.data.result.user_list[0]
 											) // 调用父组件方法提交报工信息
@@ -185,21 +188,30 @@
 												'stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
 											plus.screen.lockOrientation(
 												'landscape-primary'); //锁定屏幕为横屏
-
-										} else {
-											// 提示对比失败
+											// 提示人脸识别成功
 											this.UPDATE_TIPMODAL({
 												isShow: true,
-												tipText: '对比失败', // 提示信息
-												tipIcon: 'iconshibai', // 图标名称
+												tipText: '人脸识别成功', // 提示信息
+												tipIcon: 'iconchenggong', // 图标名称
 												mark: false, // 是否有蒙版
 												duration: 2000, // 持续时间
 											})
+										} else {
+											// 提示对比失败
+											// this.UPDATE_TIPMODAL({
+											// 	isShow: true,
+											// 	tipText: '对比失败', // 提示信息
+											// 	tipIcon: 'iconshibai', // 图标名称
+											// 	mark: false, // 是否有蒙版
+											// 	duration: 2000, // 持续时间
+											// })
+											// this.tipOper('3')
 											this.snapshotPusher()
 										}
 									}
 								},
 								fail: (err) => {
+									uni.hideLoading()
 									this.snapshotPusher()
 									console.log(err)
 								}
@@ -221,7 +233,7 @@
 	.outBorder {
 		width: 100%;
 		height: 100%;
-		background: #fff;
+		background: #000;
 		position: absolute;
 		top: 0;
 		left: 0;

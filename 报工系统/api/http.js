@@ -14,7 +14,7 @@ export const myRequest = (options) => {
 		// store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 		console.log('send data:', options.data)
 		// 访问wifi是否在线或者系统未登录时访问wifi是否在线，则显示loading
-		if (options.data.need_type != 'checkNetOnLineFun' || !uni.getStorageSync('mySysId')) {
+		if (options.data.need_type != 'getSopVersionFun' || !uni.getStorageSync('mySysId')) {
 			// 提示加载中
 			store._mutations['UPDATE_TIPMODAL'][0]({
 				isShow: true,
@@ -61,6 +61,12 @@ export const myRequest = (options) => {
 								mark: true, // 是否有蒙版
 								duration: 2000, // 持续时间
 							})
+							if(res.data.sign == -99){
+								// 跳转至登录页面
+								return uni.reLaunch({
+									url: '../login/login'
+								})
+							}
 							reject(res)
 						} else {
 							// 关闭提示加载中
