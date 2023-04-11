@@ -16,7 +16,12 @@
 					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
 						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
 				</view>
-				<button class="btn flex align-center justify-center" @click="handleLogin">开始使用</button>
+				<view class="operate flex align-center justify-between">
+					<view class="big btn flex align-center justify-center" @click="handleLogin">开始使用</view>
+					<view class="btn flex align-center justify-center" @click="settingWifi = true">
+						设置网络
+					</view>
+				</view>
 			</view>
 			<view class="num-detail flex justify-center align-center">
 				<view class="jsq flex justify-end">
@@ -87,7 +92,7 @@
 		},
 		onLoad() {},
 		computed: {
-			...mapState(['vuex_Wifi'])
+			...mapState([])
 		},
 		methods: {
 			...mapMutations(['UPDATE_TIPMODAL']),
@@ -134,10 +139,6 @@
 						})
 						return
 					}
-				}
-				// 若wifi未连接，则弹窗请用户连接网络
-				if(!this.vuex_Wifi){
-					return this.settingWifi = true
 				}
 				// 检测网络是否连通
 				this.$api({
@@ -229,14 +230,20 @@
 					}
 				}
 
-				.btn {
-					background: #9CC8ED;
-					border-radius: 5rpx;
-					font-size: 2vw;
-					color: #FFFFFF;
-					margin-top: 2vh;
-					width: 80%;
-					height: 150rpx;
+				.operate {
+					width: 100%;
+					.btn {
+						background: #9CC8ED;
+						border-radius: 5rpx;
+						font-size: 2vw;
+						color: #FFFFFF;
+						margin-top: 2vh;
+						width: 30%;
+						height: 150rpx;
+					}
+					.big {
+						width: 60%;
+					}
 				}
 			}
 

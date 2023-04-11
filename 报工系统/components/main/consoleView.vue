@@ -58,8 +58,9 @@
 			overflow: auto;
 
 			.eachRes {
-				width: 100%;
-				padding: 10rpx 0;
+				width: 95%;
+				padding: 40rpx;
+				margin: 0 auto;
 				border-bottom: 1px solid #ccc;
 				word-wrap: break-word;
 				word-break: break-all;

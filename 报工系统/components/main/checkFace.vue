@@ -36,9 +36,9 @@
 		},
 		methods: {
 			...mapMutations(['UPDATE_TIPMODAL']),
-			
+
 			// 自定义提示信息未成功，主要原因，无法关闭显示窗口
-			
+
 			// // 提示层信息
 			// tipOper(type) {
 			// 	// 覆盖在视频之上的内容，根据实际情况编写
@@ -181,7 +181,10 @@
 										if (res.data.result.user_list[0] && res.data.result.user_list[
 												0].score > 80) {
 											this.$emit(
-												'checkSuccess', res.data.result.user_list[0]
+												'checkSuccess', {
+													checkFace: true,
+													faceInfo: res.data.result.user_list[0]
+												}
 											) // 调用父组件方法提交报工信息
 											this.pusher.close() // 关闭直播流
 											this.$emit(

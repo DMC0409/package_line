@@ -193,8 +193,10 @@
 							</view>
 						</view>
 					</view>
-					<view class="sendReport flex align-center justify-end">
-						<view class="edit-btn flex align-center justify-center">
+					<view class="sendReport flex align-center justify-between">
+						<image src="../../static/image/faceCheck.png" v-if="isCard" @click="isCard = !isCard"></image>
+						<image src="../../static/image/cardCheck.png" v-else @click="isCard = !isCard"></image>
+						<view v-if="isCard" class="edit-btn flex align-center justify-center">
 							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
 								:class="inputIndex == -1?'checkOut':''">
 								<input type="number" v-model="emploId" @blur="toFocus" @confirm="onSureEdit"
@@ -205,7 +207,7 @@
 							</view>
 							<view class="submit-btn flex align-center justify-center" @click="onSureEdit">提交</view>
 						</view>
-						<view class="face-check flex align-center justify-center" @click="toCheckFace">
+						<view v-else class="face-check flex align-center justify-center" @click="toCheckFace">
 							人脸识别
 						</view>
 					</view>
@@ -423,6 +425,7 @@
 				rowData: {},
 				linkTitle: '',
 
+				isCard: true, // 是否是输入卡号
 				dataDetailAllList: {
 					yieldInfo: {
 						all: 0,
@@ -931,7 +934,7 @@
 				this.Value = []
 			},
 			// 提交报工信息
-			onSureEdit(data) {
+			onSureEdit(faceData) {
 				// 让员工卡号输入框失焦
 				this.inputIndex = -2
 				// 计算上报工资，以防用户自行虚假填写
@@ -961,6 +964,8 @@
 					if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' && (
 							item
 							.this_value == 0 || item.this_value == '')) {
+						// 清空员工卡号
+						this.onDelInput()
 						return uni.showModal({
 							title: item.head_name + '未输入',
 							success: (res) => {
@@ -979,7 +984,7 @@
 						str: item.this_str
 					})
 				}
-				console.log(data)
+				console.log(faceData)
 				// 构建发送参数结构
 				var sendData = {
 					api_class: 'Open_sopEquipmentClass',
@@ -992,7 +997,7 @@
 					//order_id: this.orderDetail.order_id,
 					//config_table_id: this.tableInfoLink.config_table_id_be,
 					data_list: dataList,
-					finger_print: data ? 'user_id@' + data.user_id : this.emploId
+					finger_print: faceData.checkFace ? 'user_id@' + faceData.faceInfo.user_id : this.emploId
 				};
 				if (this.setLineDataType == 'add') {
 					sendData['tb_auto_id'] = 0;
@@ -1035,6 +1040,44 @@
 			toCheckFace() {
 				// 获取百度token才可进行人脸识别
 				if (this.dataDetailAllList.subToken) {
+					// 计算上报工资，以防用户自行虚假填写
+					let tempLineInfo = {};
+					for (let item of this.dataDetailList) {
+						tempLineInfo['th_' + item.config_table_head_id] = item.this_value
+					}
+					let getNewLine = this.$utils.LineDataFormulae("updata", this.dataDetailList, tempLineInfo,
+						this.formulaeList, 'table');
+					for (let index in getNewLine) {
+						for (let key in this.dataDetailList) {
+							if ('th_' + this.dataDetailList[key].config_table_head_id == index) {
+								this.dataDetailList[key].this_value = getNewLine[index];
+							}
+						}
+					}
+					for (let item of this.dataDetailList) {
+						// 判断是否列入传参列表中
+						if (item.comm_set_json['set_job_submission_src_head_id'] ==
+							undefined && (item.comm_set_json['set_job_submission'] !=
+								undefined || item.comm_set_json['isedit'] != undefined)) {
+							// 停止循环执行下一个循环
+							continue;
+						}
+						// 对列表数据进行非空判断
+						if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' && (
+								item
+								.this_value == 0 || item.this_value == '')) {
+							return uni.showModal({
+								title: item.head_name + '未输入',
+								success: (res) => {
+									if (res.confirm) {
+										console.log('用户点击确定')
+									} else if (res.cancel) {
+										console.log('用户点击取消')
+									}
+								}
+							})
+						}
+					}
 					this.checkIngFace = true
 				} else {
 					// 提示未获取报工信息
@@ -1384,7 +1427,7 @@
 
 			.detail-info {
 				width: 68%;
-				height: 75%;
+				height: 85%;
 				border: 1rpx solid #42B5F1;
 				border-radius: 11rpx;
 				background-color: #090E21;
@@ -1414,6 +1457,12 @@
 						width: 100%;
 						height: 15%;
 
+						image {
+							width: 4vw;
+							height: 4vw;
+							padding: 10rpx 10rpx 10rpx 40rpx;
+						}
+
 						.face-check {
 							width: 20%;
 							height: 70%;
@@ -1432,7 +1481,7 @@
 							font-size: 1.5vw;
 
 							.inputContent {
-								width: 60%;
+								width: 65%;
 								height: 70%;
 								color: #9CC8ED;
 								background: #0A223B;
@@ -1463,7 +1512,7 @@
 							}
 
 							.submit-btn {
-								width: 20%;
+								width: 30%;
 								height: 70%;
 								font-size: 1.5vw;
 								background: #73C7EF;
@@ -1486,15 +1535,18 @@
 							font-size: 1.5vw;
 							// font-weight: bold;
 							// padding: 15rpx 0 0 14rpx;
-							border-bottom: 1rpx solid #68686F;
+							border-bottom: 1rpx solid #42B5F1;
 							padding: 3vh 0 0 0;
 							position: relative;
 							box-sizing: border-box;
-							.left-item-top{
+
+							.left-item-top {
 								margin: 3vh;
 							}
+
 							.left-item {
-								margin: 3vh;
+								margin: 1vh;
+								font-size: 2vw;
 
 								.eachInput {
 									width: 17vw;
@@ -1505,7 +1557,7 @@
 									border-radius: 5rpx;
 									padding: 5rpx 16rpx;
 									outline: 0;
-									font-size: 1.5vw;
+									font-size: 2vw;
 									font-weight: bold;
 									color: #A4CEF4;
 								}
@@ -1551,7 +1603,7 @@
 									}
 
 									input {
-										font-size: 1.5vw;
+										font-size: 2vw;
 									}
 
 									.type-item {
@@ -1560,7 +1612,7 @@
 										padding: 10rpx 12rpx;
 										background: #061830;
 										border-radius: 5rpx;
-										font-size: 1.5vw;
+										font-size: 2vw;
 									}
 
 									.type-item-selected {
@@ -1577,6 +1629,7 @@
 							background-color: #061830;
 							border-radius: 0rpx 11rpx 11rpx 0rpx;
 							border-left: 1rpx solid #42B5F1;
+							border-bottom: 1rpx solid #42B5F1;
 							box-sizing: border-box;
 
 							.jsq {
