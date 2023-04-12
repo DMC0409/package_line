@@ -17,10 +17,10 @@
 						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
 				</view>
 				<view class="operate flex align-center justify-between">
-					<view class="big btn flex align-center justify-center" @click="handleLogin">开始使用</view>
-					<view class="btn flex align-center justify-center" @click="settingWifi = true">
+					<button class="big btn flex align-center justify-center" @click="handleLogin">开始使用</button>
+					<button class="btn flex align-center justify-center" @click="settingWifi = true">
 						设置网络
-					</view>
+					</button>
 				</view>
 			</view>
 			<view class="num-detail flex justify-center align-center">
@@ -239,7 +239,6 @@
 						color: #FFFFFF;
 						margin-top: 2vh;
 						width: 30%;
-						height: 50rpx;
 					}
 					.big {
 						width: 60%;
