@@ -239,7 +239,7 @@
 						color: #FFFFFF;
 						margin-top: 2vh;
 						width: 30%;
-						height: 150rpx;
+						height: 50rpx;
 					}
 					.big {
 						width: 60%;

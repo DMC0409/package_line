@@ -443,6 +443,7 @@
 				timer: null, //右上角时间循环器
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
+				load:undefined,// 报工接口延时器
 
 				checkIngFace: false, // 人脸识别窗口
 			}
@@ -494,9 +495,8 @@
 				}
 			},
 			vuex_Wifi(newVal, oldVal) {
-				console.log(newVal)
-				if (newVal) {
-					// 网络一旦连接则获取报工表格
+				if (newVal & this.stepsList.length == 0) {
+					// 网络一旦连接并且步骤列表数据为空数组则获取报工表格
 					this.getPackTable()
 				}
 			}
@@ -708,6 +708,7 @@
 						code: this.shigongDH2
 					}
 				}).then(res => {
+					console.log(res)
 					const {
 						orderInfo,
 						customerInfo,
@@ -715,6 +716,15 @@
 						go_config_table_id,
 						go_tb_auto_id
 					} = res.data.data
+					this.orderDetail.order_id = orderInfo.order_id
+					this.orderDetail.orderTitle = orderInfo.order_title
+					this.orderDetail.orderNum = orderInfo.order_index
+					this.orderDetail.orderTime = this.$moment(Number(orderInfo.timen_end * 1000)).format(
+						'YYYY-MM-DD')
+					this.orderDetail.customerInfo = orderInfo.company_name_str
+					this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
+					this.shiGongDImg = orderInfo.order_img || ''
+					this.tuGaoImgList = orderFilesList
 					if (go_config_table_id) {
 						// 获取需要报工的单据
 						this.$api({
@@ -736,15 +746,6 @@
 							console.log(err)
 						})
 					} else {
-						this.orderDetail.order_id = orderInfo.order_id
-						this.orderDetail.orderTitle = orderInfo.order_title
-						this.orderDetail.orderNum = orderInfo.order_index
-						this.orderDetail.orderTime = this.$moment(Number(orderInfo.timen_end * 1000)).format(
-							'YYYY-MM-DD')
-						this.orderDetail.customerInfo = orderInfo.company_name_str
-						this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
-						this.shiGongDImg = orderInfo.order_img || ''
-						this.tuGaoImgList = orderFilesList
 						this.offInputSure()
 						if (this.stepsIndex != -1) {
 							this.onShowDetail(this.stepsList[this.stepsIndex], this.stepsIndex)
@@ -932,109 +933,115 @@
 			onDelInput() {
 				this.emploId = '';
 				this.Value = []
+				if(this.load){
+					clearTimeout(this.load)
+				}
 			},
 			// 提交报工信息
 			onSureEdit(faceData) {
-				// 让员工卡号输入框失焦
-				this.inputIndex = -2
-				// 计算上报工资，以防用户自行虚假填写
-				let tempLineInfo = {};
-				for (let item of this.dataDetailList) {
-					tempLineInfo['th_' + item.config_table_head_id] = item.this_value
-				}
-				let getNewLine = this.$utils.LineDataFormulae("updata", this.dataDetailList, tempLineInfo,
-					this.formulaeList, 'table');
-				for (let index in getNewLine) {
-					for (let key in this.dataDetailList) {
-						if ('th_' + this.dataDetailList[key].config_table_head_id == index) {
-							this.dataDetailList[key].this_value = getNewLine[index];
+				this.load = setTimeout(() => {
+					// 让员工卡号输入框失焦
+					this.inputIndex = -2
+					// 计算上报工资，以防用户自行虚假填写
+					let tempLineInfo = {};
+					for (let item of this.dataDetailList) {
+						tempLineInfo['th_' + item.config_table_head_id] = item.this_value
+					}
+					let getNewLine = this.$utils.LineDataFormulae("updata", this.dataDetailList, tempLineInfo,
+						this.formulaeList, 'table');
+					for (let index in getNewLine) {
+						for (let key in this.dataDetailList) {
+							if ('th_' + this.dataDetailList[key].config_table_head_id == index) {
+								this.dataDetailList[key].this_value = getNewLine[index];
+							}
 						}
 					}
-				}
-				let dataList = []
-				for (let item of this.dataDetailList) {
-					// 判断是否列入传参列表中
-					if (item.comm_set_json['set_job_submission_src_head_id'] ==
-						undefined && (item.comm_set_json['set_job_submission'] !=
-							undefined || item.comm_set_json['isedit'] != undefined)) {
-						// 停止循环执行下一个循环
-						continue;
-					}
-					// 对列表数据进行非空判断
-					if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' && (
-							item
-							.this_value == 0 || item.this_value == '')) {
-						// 清空员工卡号
-						this.onDelInput()
-						return uni.showModal({
-							title: item.head_name + '未输入',
-							success: (res) => {
-								if (res.confirm) {
-									console.log('用户点击确定')
-								} else if (res.cancel) {
-									console.log('用户点击取消')
+					let dataList = []
+					for (let item of this.dataDetailList) {
+						// 判断是否列入传参列表中
+						if (item.comm_set_json['set_job_submission_src_head_id'] ==
+							undefined && (item.comm_set_json['set_job_submission'] !=
+								undefined || item.comm_set_json['isedit'] != undefined)) {
+							// 停止循环执行下一个循环
+							continue;
+						}
+						// 对列表数据进行非空判断
+						if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json[
+							'set_not_null'] == '1' && (
+								item
+								.this_value == 0 || item.this_value == '')) {
+							// 清空员工卡号
+							this.onDelInput()
+							return uni.showModal({
+								title: item.head_name + '未输入',
+								success: (res) => {
+									if (res.confirm) {
+										console.log('用户点击确定')
+									} else if (res.cancel) {
+										console.log('用户点击取消')
+									}
 								}
-							}
+							})
+						}
+						// 构建需要提交的表单数据
+						dataList.push({
+							name: item.config_table_head_id,
+							value: item.this_value,
+							str: item.this_str
 						})
 					}
-					// 构建需要提交的表单数据
-					dataList.push({
-						name: item.config_table_head_id,
-						value: item.this_value,
-						str: item.this_str
-					})
-				}
-				console.log(faceData)
-				// 构建发送参数结构
-				var sendData = {
-					api_class: 'Open_sopEquipmentClass',
-					need_type: 'mobSetTableDataInfoFun',
-					mySysId: uni.getStorageSync('mySysId'),
-					loginsession_sop: uni.getStorageSync('loginsession'),
-					//tb_auto_id: this.setLineDataType=='add'?'0':this.dataDetailAllList.lineInfo.tb_auto_id,
-					//set_from_config_table_id: this.tableInfoLink.config_table_id_main,
-					//set_from_tb_auto_id: this.dataDetailAllList.tb_auto_id,
-					//order_id: this.orderDetail.order_id,
-					//config_table_id: this.tableInfoLink.config_table_id_be,
-					data_list: dataList,
-					finger_print: faceData.checkFace ? 'user_id@' + faceData.faceInfo.user_id : this.emploId
-				};
-				if (this.setLineDataType == 'add') {
-					sendData['tb_auto_id'] = 0;
-					sendData['set_from_config_table_id'] = this.tableInfoLink.config_table_id_main;
-					sendData['set_from_tb_auto_id'] = this.dataDetailAllList.tb_auto_id;
-					sendData['order_id'] = this.orderDetail.order_id;
-					sendData['config_table_id'] = this.tableInfoLink.config_table_id_be;
-				} else {
-					sendData['tb_auto_id'] = this.dataDetailAllList.lineInfo.tb_auto_id;
-					sendData['config_table_id'] = this.dataDetailAllList.lineInfo.config_table_id;
-					sendData['order_id'] = this.dataDetailAllList.lineInfo.order_id;
-				}
-				this.$api({
-					url: '/api/data.php',
-					method: 'post',
-					data: sendData
-				}).then(res => {
-					// 提示报工成功
-					this.UPDATE_TIPMODAL({
-						isShow: true,
-						tipText: '报工成功', // 提示信息
-						tipIcon: 'iconchenggong', // 图标名称
-						mark: true, // 是否有蒙版
-						duration: 2000, // 持续时间
-					})
-					// 聚焦至员工卡号输入框
-					this.inputIndex = -1
+					console.log(faceData)
+					// 构建发送参数结构
+					var sendData = {
+						api_class: 'Open_sopEquipmentClass',
+						need_type: 'mobSetTableDataInfoFun',
+						mySysId: uni.getStorageSync('mySysId'),
+						loginsession_sop: uni.getStorageSync('loginsession'),
+						//tb_auto_id: this.setLineDataType=='add'?'0':this.dataDetailAllList.lineInfo.tb_auto_id,
+						//set_from_config_table_id: this.tableInfoLink.config_table_id_main,
+						//set_from_tb_auto_id: this.dataDetailAllList.tb_auto_id,
+						//order_id: this.orderDetail.order_id,
+						//config_table_id: this.tableInfoLink.config_table_id_be,
+						data_list: dataList,
+						finger_print: faceData.checkFace ? 'user_id@' + faceData.faceInfo.user_id : this
+							.emploId
+					};
+					if (this.setLineDataType == 'add') {
+						sendData['tb_auto_id'] = 0;
+						sendData['set_from_config_table_id'] = this.tableInfoLink.config_table_id_main;
+						sendData['set_from_tb_auto_id'] = this.dataDetailAllList.tb_auto_id;
+						sendData['order_id'] = this.orderDetail.order_id;
+						sendData['config_table_id'] = this.tableInfoLink.config_table_id_be;
+					} else {
+						sendData['tb_auto_id'] = this.dataDetailAllList.lineInfo.tb_auto_id;
+						sendData['config_table_id'] = this.dataDetailAllList.lineInfo.config_table_id;
+						sendData['order_id'] = this.dataDetailAllList.lineInfo.order_id;
+					}
 					// 清空员工卡号
 					this.onDelInput()
-				}, () => {
-					// 聚焦至员工卡号输入框
-					this.inputIndex = -1
-					// 清空员工卡号
-					this.onDelInput()
-				}).catch(err => {
-					console.log(err)
-				})
+					// 提交报工接口
+					this.$api({
+						url: '/api/data.php',
+						method: 'post',
+						data: sendData
+					}).then(res => {
+						// 提示报工成功
+						this.UPDATE_TIPMODAL({
+							isShow: true,
+							tipText: '报工成功', // 提示信息
+							tipIcon: 'iconchenggong', // 图标名称
+							mark: true, // 是否有蒙版
+							duration: 2000, // 持续时间
+						})
+						// 聚焦至员工卡号输入框
+						this.inputIndex = -1
+					}, () => {
+						// 聚焦至员工卡号输入框
+						this.inputIndex = -1
+					}).catch(err => {
+						console.log(err)
+					})
+				}, 500)
 			},
 			// 进行人脸识别
 			toCheckFace() {
@@ -1063,7 +1070,8 @@
 							continue;
 						}
 						// 对列表数据进行非空判断
-						if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' && (
+						if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json['set_not_null'] == '1' &&
+							(
 								item
 								.this_value == 0 || item.this_value == '')) {
 							return uni.showModal({
@@ -1844,7 +1852,7 @@
 					margin: auto;
 					height: 20%;
 					color: #A6C4E6;
-					font-size: 1vw;
+					font-size: 2vw;
 					padding: 2vh 3vw;
 					flex-direction: column;
 
