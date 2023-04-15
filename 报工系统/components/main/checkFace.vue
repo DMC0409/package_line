@@ -32,6 +32,15 @@
 				}
 			});
 			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
+			// 提示正在打开摄像头
+			this.UPDATE_TIPMODAL({
+				isShow: true,
+				tipText: '正在打开摄像头', // 提示信息
+				tipIcon: 'iconloading', // 图标名称
+				mark: false, // 是否有蒙版
+				duration: 3000, // 持续时间
+				turnRotate: true //是否旋转
+			})
 			this.faceInit()
 		},
 		methods: {

@@ -8,13 +8,9 @@ export const myRequest = (options) => {
 	return new Promise((resolve, reject) => {
 		// 统一添加访问标识
 		options.data.isSopRequest = '1'
-		// // 打印调试信息
-		// let nowConsole = JSON.parse(JSON.stringify(store.state.vuex_Console))
-		// nowConsole.push(options.data)
-		// store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 		console.log('send data:', options.data)
-		// 访问wifi是否在线或者系统未登录时访问wifi是否在线，则显示loading
-		if (options.data.need_type != 'getSopVersionFun' || !uni.getStorageSync('mySysId')) {
+		// 检查版本信息时不显示loading
+		if (options.data.need_type != 'getSopVersionFun') {
 			// 提示加载中
 			store._mutations['UPDATE_TIPMODAL'][0]({
 				isShow: true,
@@ -101,6 +97,6 @@ export const myRequest = (options) => {
 					reject(err)
 				}
 			})
-		}, 1500)
+		}, 1000)
 	})
 }

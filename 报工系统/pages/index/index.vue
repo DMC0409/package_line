@@ -41,7 +41,7 @@
 					<image @click="toScan" src="../../static/image/scan.png" alt=""></image>
 				</view> -->
 				<input type="number" :focus="getFocus" @blur="toFocus" v-model="shigongDH2"
-					placeholder-class="place-class" @confirm="onInputSure" placeholder="施工单号">
+					placeholder-class="place-class" @confirm="onSetOrder" placeholder="施工单号">
 				<view class="detail">
 					<view class="jsq flex justify-end">
 						<view class="jsq-item flex justify-center align-center" @tap.stop="onClickDH('1')">1</view>
@@ -194,8 +194,8 @@
 						</view>
 					</view>
 					<view class="sendReport flex align-center justify-between">
-						<image src="../../static/image/faceCheck.png" v-if="isCard" @click="isCard = !isCard"></image>
-						<image src="../../static/image/cardCheck.png" v-else @click="isCard = !isCard"></image>
+						<image src="../../static/image/faceCheck.png" v-if="isCard" @click="changeCheckWay()"></image>
+						<image src="../../static/image/cardCheck.png" v-else @click="changeCheckWay()"></image>
 						<view v-if="isCard" class="edit-btn flex align-center justify-center">
 							<view @tap="toEditCard" class="inputContent flex align-center justify-around"
 								:class="inputIndex == -1?'checkOut':''">
@@ -425,7 +425,7 @@
 				rowData: {},
 				linkTitle: '',
 
-				isCard: true, // 是否是输入卡号
+				isCard: uni.getStorageSync('isCard') ? uni.getStorageSync('isCard') : false, // 是否是输入卡号
 				dataDetailAllList: {
 					yieldInfo: {
 						all: 0,
@@ -443,7 +443,7 @@
 				timer: null, //右上角时间循环器
 				versionTimer: null, //版本信息循环器
 				setLineDataType: '', //add or update
-				load:undefined,// 报工接口延时器
+				load: undefined, // 报工接口延时器
 
 				checkIngFace: false, // 人脸识别窗口
 			}
@@ -695,8 +695,17 @@
 				// 显示输入施工单号弹窗
 				this.showShiGongDH = true
 			},
+			// 扫码输入施工单号
+			async onSetOrder(e) {
+				this.shigongDH2 = e.detail.value
+				await this.checkScanCode(this.shigongDH2)
+			},
+			// 手动输入确认施工单号
+			async onInputSure() {
+				await this.checkScanCode(this.shigongDH2)
+			},
 			// 确认施工单号输入框
-			onInputSure() {
+			async checkScanCode(code) {
 				this.$api({
 					url: '/api/data.php',
 					method: 'post',
@@ -705,7 +714,7 @@
 						need_type: 'checkScanCodeFun',
 						mySysId: uni.getStorageSync('mySysId'),
 						loginsession_sop: uni.getStorageSync('loginsession'),
-						code: this.shigongDH2
+						code: code
 					}
 				}).then(res => {
 					console.log(res)
@@ -719,8 +728,9 @@
 					this.orderDetail.order_id = orderInfo.order_id
 					this.orderDetail.orderTitle = orderInfo.order_title
 					this.orderDetail.orderNum = orderInfo.order_index
-					this.orderDetail.orderTime = this.$moment(Number(orderInfo.timen_end * 1000)).format(
-						'YYYY-MM-DD')
+					this.orderDetail.orderTime = this.$moment(Number(orderInfo.timen_end * 1000))
+						.format(
+							'YYYY-MM-DD')
 					this.orderDetail.customerInfo = orderInfo.company_name_str
 					this.orderDetail.orderRang = JSON.parse(orderInfo.now_range_show)
 					this.shiGongDImg = orderInfo.order_img || ''
@@ -924,6 +934,11 @@
 					this.$set(this.dataDetailList[this.inputIndex], 'this_str', headValue)
 				}
 			},
+			// 切换认证方式
+			changeCheckWay() {
+				this.isCard = !this.isCard
+				uni.setStorageSync('isCard', this.isCard)
+			},
 			// 编辑员工卡号
 			toEditCard() {
 				this.inputIndex = -1
@@ -933,7 +948,7 @@
 			onDelInput() {
 				this.emploId = '';
 				this.Value = []
-				if(this.load){
+				if (this.load) {
 					clearTimeout(this.load)
 				}
 			},
@@ -967,7 +982,7 @@
 						}
 						// 对列表数据进行非空判断
 						if (item.comm_set_json['set_not_null'] != undefined && item.comm_set_json[
-							'set_not_null'] == '1' && (
+								'set_not_null'] == '1' && (
 								item
 								.this_value == 0 || item.this_value == '')) {
 							// 清空员工卡号
@@ -1035,6 +1050,8 @@
 						})
 						// 聚焦至员工卡号输入框
 						this.inputIndex = -1
+						// 关闭报工窗口
+						this.showOrderDetail = false
 					}, () => {
 						// 聚焦至员工卡号输入框
 						this.inputIndex = -1
@@ -1125,7 +1142,6 @@
 			onInitSet() {
 				// 清除持久化数据
 				uni.removeStorageSync('loginsession')
-				uni.removeStorageSync('mySysId')
 				// 跳转至登陆页面
 				uni.reLaunch({
 					url: '../login/login'

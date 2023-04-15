@@ -67,16 +67,16 @@
 				// 表单结构数据
 				formList: [{
 						label: '系统编号',
-						value: '',
+						value: uni.getStorageSync('mySysId'),
 						focus: false,
 					},
 					{
 						label: 'SOP账户',
-						value: '',
+						value: uni.getStorageSync('account'),
 						focus: false,
 					}, {
 						label: 'SOP密码',
-						value: '',
+						value: uni.getStorageSync('password'),
 						focus: false,
 					},
 				],
@@ -174,6 +174,8 @@
 					// 登陆凭证持久化
 					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
 					uni.setStorageSync('mySysId', this.formList[0].value)
+					uni.setStorageSync('account', this.formList[1].value)
+					uni.setStorageSync('password', this.formList[2].value)
 					// 跳转至报单页面
 					uni.reLaunch({
 						url: '../index/index'
@@ -242,6 +244,7 @@
 					}
 					.big {
 						width: 60%;
+						background: green;
 					}
 				}
 			}
