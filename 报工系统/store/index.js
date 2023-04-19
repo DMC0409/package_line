@@ -11,6 +11,7 @@ const store = new Vuex.Store({
 			tipIcon: '', // 图标名称
 			mark: true, // 是否有蒙版
 			duration: -1, // 持续时间
+			mode:'' // 弹窗模式 self-系统发起 custom-用户发起
 		},
 		vuex_Console: []
 	},

@@ -987,16 +987,23 @@
 								.this_value == 0 || item.this_value == '')) {
 							// 清空员工卡号
 							this.onDelInput()
-							return uni.showModal({
-								title: item.head_name + '未输入',
-								success: (res) => {
-									if (res.confirm) {
-										console.log('用户点击确定')
-									} else if (res.cancel) {
-										console.log('用户点击取消')
-									}
-								}
+							let endStr = '输入'
+							if (item.head_input_set == '20' || item.head_input_set == '21' || item.head_style ==
+								'17') {
+								endStr = '选择'
+							}
+							// 提示未输入信息
+							this.UPDATE_TIPMODAL({
+								isShow: true,
+								tipText: item.head_name + '未' + endStr, // 提示信息
+								tipIcon: 'iconshibai', // 图标名称
+								mark: true, // 是否有蒙版
+								duration: 0, // 持续时间
+								mode: 'custom', // 弹窗模式
+								buttonText: '重新' + endStr, // 按钮文字
+								contentText: '' // 正文
 							})
+							return
 						}
 						// 构建需要提交的表单数据
 						dataList.push({
@@ -1043,10 +1050,13 @@
 						// 提示报工成功
 						this.UPDATE_TIPMODAL({
 							isShow: true,
-							tipText: '报工成功', // 提示信息
+							tipText: res.data.data.userInfo.chname + '， 您辛苦啦', // 提示信息
 							tipIcon: 'iconchenggong', // 图标名称
 							mark: true, // 是否有蒙版
-							duration: 2000, // 持续时间
+							duration: 0, // 持续时间
+							mode: 'custom', // 弹窗模式
+							buttonText: '成功报工', // 按钮文字
+							contentText: '' // 正文
 						})
 						// 聚焦至员工卡号输入框
 						this.inputIndex = -1
@@ -1112,6 +1122,7 @@
 						tipIcon: 'iconshibai', // 图标名称
 						mark: true, // 是否有蒙版
 						duration: 2000, // 持续时间
+						mode: 'custom' // 弹窗模式
 					})
 				}
 			},
@@ -1183,6 +1194,7 @@
 												tipIcon: 'iconshibai', // 图标名称
 												mark: true, // 是否有蒙版
 												duration: 2000, // 持续时间
+												mode: 'self' // 弹窗模式
 											})
 											return
 										}

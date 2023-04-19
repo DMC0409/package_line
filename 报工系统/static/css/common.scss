@@ -9,7 +9,10 @@
 }
 .align-end{
 	align-items: flex-end;
-}	
+}
+.align-around{
+	align-content: space-around;
+}
 .justify-center{
 	justify-content: center;
 }

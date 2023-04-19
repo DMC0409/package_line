@@ -90,7 +90,18 @@
 		components: {
 			wifiModal
 		},
-		onLoad() {},
+		onLoad() {
+			this.UPDATE_TIPMODAL({
+				isShow: true,
+				tipText: '超出可输入长度', // 提示信息
+				tipIcon: 'iconchenggong', // 图标名称
+				mark: true, // 是否有蒙版
+				duration: 0, // 持续时间
+				mode: 'custom', // 弹窗模式
+				buttonText: 'ok' ,// 按钮文字
+				contentText:'123' // 正文
+			})
+		},
 		computed: {
 			...mapState([])
 		},
@@ -119,6 +130,7 @@
 							tipIcon: 'iconshibai', // 图标名称
 							mark: true, // 是否有蒙版
 							duration: 2000, // 持续时间
+							mode: 'custom' // 弹窗模式
 						})
 					}
 				}
@@ -129,13 +141,14 @@
 			handleLogin() {
 				for (let i of this.formList) {
 					if (i.value == '') {
-						// 提示登陆成功
+						// 提示请输入信息
 						this.UPDATE_TIPMODAL({
 							isShow: true,
 							tipText: '请输入信息', // 提示信息
 							tipIcon: 'iconshibai', // 图标名称
 							mark: true, // 是否有蒙版
 							duration: 2000, // 持续时间
+							mode: 'custom' // 弹窗模式
 						})
 						return
 					}
@@ -169,7 +182,8 @@
 						tipText: '登陆成功', // 提示信息
 						tipIcon: 'iconchenggong', // 图标名称
 						mark: true, // 是否有蒙版
-						duration: 1000, // 持续时间
+						duration: 2000, // 持续时间
+						mode: 'self' // 弹窗模式
 					})
 					// 登陆凭证持久化
 					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
@@ -234,6 +248,7 @@
 
 				.operate {
 					width: 100%;
+
 					.btn {
 						background: #9CC8ED;
 						border-radius: 5rpx;
@@ -242,6 +257,7 @@
 						margin-top: 2vh;
 						width: 30%;
 					}
+
 					.big {
 						width: 60%;
 						background: green;

@@ -18,6 +18,7 @@ export const myRequest = (options) => {
 				tipIcon: 'iconloading', // 图标名称
 				mark: true, // 是否有蒙版
 				duration: 0, // 持续时间
+				mode:'self' // 弹窗模式
 			})
 		}
 		TIME = setTimeout(() => {
@@ -45,18 +46,34 @@ export const myRequest = (options) => {
 							tipIcon: 'iconshibai', // 图标名称
 							mark: true, // 是否有蒙版
 							duration: 2000, // 持续时间
+							mode:'self' // 弹窗模式
 						})
 						reject(res)
 					} else if (typeof(res.data) == 'object') {
 						if (res.data.sign != 1) {
-							// 错误提示
-							store._mutations['UPDATE_TIPMODAL'][0]({
-								isShow: true,
-								tipText: res.data.info, // 提示信息
-								tipIcon: 'iconshibai', // 图标名称
-								mark: true, // 是否有蒙版
-								duration: 2000, // 持续时间
-							})
+							if(res.data.data.need_type == 'checkScanCodeFun'){
+								// 施工单号不存在，特殊提示
+								store._mutations['UPDATE_TIPMODAL'][0]({
+									isShow: true,
+									tipText: res.data.info, // 提示信息
+									tipIcon: 'iconshibai', // 图标名称
+									mark: true, // 是否有蒙版
+									duration: 0, // 持续时间
+									mode: 'custom', // 弹窗模式
+									buttonText: '重新输入', // 按钮文字
+									contentText: res.data.data.code // 正文
+								})
+							}else{
+								// 错误提示
+								store._mutations['UPDATE_TIPMODAL'][0]({
+									isShow: true,
+									tipText: res.data.info, // 提示信息
+									tipIcon: 'iconshibai', // 图标名称
+									mark: true, // 是否有蒙版
+									duration: 2000, // 持续时间
+									mode:'self' // 弹窗模式
+								})
+							}
 							if(res.data.sign == -99){
 								// 跳转至登录页面
 								return uni.reLaunch({
@@ -72,6 +89,7 @@ export const myRequest = (options) => {
 								tipIcon: '', // 图标名称
 								mark: true, // 是否有蒙版
 								duration: 0, // 持续时间
+								mode:'' // 弹窗模式
 							})
 							resolve(res)
 						}
@@ -93,6 +111,7 @@ export const myRequest = (options) => {
 						tipIcon: 'iconshibai', // 图标名称
 						mark: true, // 是否有蒙版
 						duration: 2000, // 持续时间
+						mode:'self' // 弹窗模式
 					})
 					reject(err)
 				}

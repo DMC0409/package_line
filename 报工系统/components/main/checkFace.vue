@@ -39,7 +39,8 @@
 				tipIcon: 'iconloading', // 图标名称
 				mark: false, // 是否有蒙版
 				duration: 3000, // 持续时间
-				turnRotate: true //是否旋转
+				turnRotate: true ,//是否旋转
+				mode:'self' // 弹窗模式
 			})
 			this.faceInit()
 		},
@@ -120,6 +121,7 @@
 						tipIcon: 'iconshibai', // 图标名称
 						mark: false, // 是否有蒙版
 						duration: 2000, // 持续时间
+						mode:'self' // 弹窗模式
 					})
 				} else {
 					this.snapshTimeout = setTimeout(() => {
@@ -182,6 +184,7 @@
 										// 	tipIcon: 'iconshibai', // 图标名称
 										// 	mark: false, // 是否有蒙版
 										// 	duration: 2000, // 持续时间
+										// mode:'self' // 弹窗模式
 										// })
 										// this.tipOper('2')
 										this.snapshotPusher()
@@ -207,6 +210,7 @@
 												tipIcon: 'iconchenggong', // 图标名称
 												mark: false, // 是否有蒙版
 												duration: 2000, // 持续时间
+												mode:'self' // 弹窗模式
 											})
 										} else {
 											// 提示对比失败
@@ -216,6 +220,7 @@
 											// 	tipIcon: 'iconshibai', // 图标名称
 											// 	mark: false, // 是否有蒙版
 											// 	duration: 2000, // 持续时间
+											// mode:'self' // 弹窗模式
 											// })
 											// this.tipOper('3')
 											this.snapshotPusher()

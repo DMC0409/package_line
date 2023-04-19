@@ -70,53 +70,55 @@
 				tipIcon: 'iconloading', // 图标名称
 				mark: true, // 是否有蒙版
 				duration: 0, // 持续时间
+				mode:'self' // 弹窗模式
 			})
-			uni.startWifi({
-				success: (res) => {
-					uni.getWifiList({
-						success: (res) => {
-							console.log('toGetWifi:', res)
-						}
-					})
-				},
-				fail: (err) => {
-					this.$utils.judgeWifiState(err)
-				}
-			})
-			// 获取已连接wifi信息
-			uni.getConnectedWifi({
-				success: (res) => {
-					this.nowWifi = res.wifi
-					console.log('now:', this.nowWifi)
-				},
-				fail: (err) => {}
-			})
-			uni.onGetWifiList((res) => {
-				console.log('wifi-----', res)
-				// 过滤相同SSID的wifi，保留信号最强的wifi
-				let dealHashMap = res.wifiList.reduce((hashMap, next) => {
-					hashMap[next.SSID] = hashMap[next.SSID] ? [...hashMap[next.SSID], next] : [next];
-					return hashMap;
-				}, {});
-				let eachMax = []
-				for (let i in dealHashMap) {
-					let signalArr = dealHashMap[i].sort((a, b) => {
-						return b.signalStrength - a.signalStrength;
-					});
-					eachMax.push(signalArr[0])
-				}
-				this.list = eachMax.sort((a, b) => {
-					return b.signalStrength - a.signalStrength;
-				});
-				// 关闭提示加载中
-				this.UPDATE_TIPMODAL({
-					isShow: false,
-					tipText: '', // 提示信息
-					tipIcon: '', // 图标名称
-					mark: true, // 是否有蒙版
-					duration: 0, // 持续时间
-				})
-			})
+			// uni.startWifi({
+			// 	success: (res) => {
+			// 		uni.getWifiList({
+			// 			success: (res) => {
+			// 				console.log('toGetWifi:', res)
+			// 			}
+			// 		})
+			// 	},
+			// 	fail: (err) => {
+			// 		this.$utils.judgeWifiState(err)
+			// 	}
+			// })
+			// // 获取已连接wifi信息
+			// uni.getConnectedWifi({
+			// 	success: (res) => {
+			// 		this.nowWifi = res.wifi
+			// 		console.log('now:', this.nowWifi)
+			// 	},
+			// 	fail: (err) => {}
+			// })
+			// uni.onGetWifiList((res) => {
+			// 	console.log('wifi-----', res)
+			// 	// 过滤相同SSID的wifi，保留信号最强的wifi
+			// 	let dealHashMap = res.wifiList.reduce((hashMap, next) => {
+			// 		hashMap[next.SSID] = hashMap[next.SSID] ? [...hashMap[next.SSID], next] : [next];
+			// 		return hashMap;
+			// 	}, {});
+			// 	let eachMax = []
+			// 	for (let i in dealHashMap) {
+			// 		let signalArr = dealHashMap[i].sort((a, b) => {
+			// 			return b.signalStrength - a.signalStrength;
+			// 		});
+			// 		eachMax.push(signalArr[0])
+			// 	}
+			// 	this.list = eachMax.sort((a, b) => {
+			// 		return b.signalStrength - a.signalStrength;
+			// 	});
+			// 	// 关闭提示加载中
+			// 	this.UPDATE_TIPMODAL({
+			// 		isShow: false,
+			// 		tipText: '', // 提示信息
+			// 		tipIcon: '', // 图标名称
+			// 		mark: true, // 是否有蒙版
+			// 		duration: 0, // 持续时间
+			// 	    mode:'' // 弹窗模式
+			// 	})
+			// })
 		},
 		methods: {
 			...mapMutations(['UPDATE_WIFI', 'UPDATE_TIPMODAL']),
@@ -137,33 +139,34 @@
 				this.wifiItem = item
 			},
 			toLink() {
-				uni.connectWifi({
-					SSID: this.wifiItem.SSID,
-					BSSID: this.wifiItem.BSSID,
-					//WiFi的密码 
-					password: this.password,
-					partialInfo: true,
-					maunal: false,
-					success: (res) => {
-						// 修改网络状态为在线
-						this.UPDATE_WIFI(true)
-						// 提示连接成功
-						this.UPDATE_TIPMODAL({
-							isShow: true,
-							tipText: '连接成功', // 提示信息
-							tipIcon: 'iconchenggong', // 图标名称
-							mark: true, // 是否有蒙版
-							duration: 2000, // 持续时间
-						})
-						this.toClose()
+				// uni.connectWifi({
+				// 	SSID: this.wifiItem.SSID,
+				// 	BSSID: this.wifiItem.BSSID,
+				// 	//WiFi的密码 
+				// 	password: this.password,
+				// 	partialInfo: true,
+				// 	maunal: false,
+				// 	success: (res) => {
+				// 		// 修改网络状态为在线
+				// 		this.UPDATE_WIFI(true)
+				// 		// 提示连接成功
+				// 		this.UPDATE_TIPMODAL({
+				// 			isShow: true,
+				// 			tipText: '连接成功', // 提示信息
+				// 			tipIcon: 'iconchenggong', // 图标名称
+				// 			mark: true, // 是否有蒙版
+				// 			duration: 2000, // 持续时间
+				// 			mode:'self' // 弹窗模式
+				// 		})
+				// 		this.toClose()
 
-					},
-					fail: (err) => {
-						console.log(err)
-						this.$utils.judgeWifiState(err)
-						this.password = ''
-					}
-				})
+				// 	},
+				// 	fail: (err) => {
+				// 		console.log(err)
+				// 		this.$utils.judgeWifiState(err)
+				// 		this.password = ''
+				// 	}
+				// })
 			},
 			cancelLink() {
 				this.wifiItem = ''
@@ -178,12 +181,12 @@
 				});
 			}
 		},
-		destroyed() {
-			uni.stopWifi({
-				success: (res) => {},
-				fail: (err) => {}
-			})
-		}
+		// destroyed() {
+		// 	uni.stopWifi({
+		// 		success: (res) => {},
+		// 		fail: (err) => {}
+		// 	})
+		// }
 	}
 </script>
 
