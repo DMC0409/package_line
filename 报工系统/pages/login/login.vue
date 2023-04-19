@@ -90,18 +90,6 @@
 		components: {
 			wifiModal
 		},
-		onLoad() {
-			this.UPDATE_TIPMODAL({
-				isShow: true,
-				tipText: '超出可输入长度', // 提示信息
-				tipIcon: 'iconchenggong', // 图标名称
-				mark: true, // 是否有蒙版
-				duration: 0, // 持续时间
-				mode: 'custom', // 弹窗模式
-				buttonText: 'ok' ,// 按钮文字
-				contentText:'123' // 正文
-			})
-		},
 		computed: {
 			...mapState([])
 		},

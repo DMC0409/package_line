@@ -15,7 +15,7 @@
 				scanWin: null,
 				faceInitTimeout: null,
 				snapshTimeout: null,
-				uploadFileTask: null,
+				loadModal: null,
 				faceCheckNum: 0,
 
 				screenWidth: 0,
@@ -33,15 +33,17 @@
 			});
 			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
 			// 提示正在打开摄像头
-			this.UPDATE_TIPMODAL({
-				isShow: true,
-				tipText: '正在打开摄像头', // 提示信息
-				tipIcon: 'iconloading', // 图标名称
-				mark: false, // 是否有蒙版
-				duration: 3000, // 持续时间
-				turnRotate: true ,//是否旋转
-				mode:'self' // 弹窗模式
-			})
+			this.loadModal = setTimeout(() => {
+				this.UPDATE_TIPMODAL({
+					isShow: true,
+					tipText: '正在打开摄像头', // 提示信息
+					tipIcon: 'iconloading', // 图标名称
+					mark: false, // 是否有蒙版
+					duration: 0, // 持续时间
+					turnRotate: true, //是否旋转
+					mode: 'self' // 弹窗模式
+				})
+			}, 500)
 			this.faceInit()
 		},
 		methods: {
@@ -121,7 +123,7 @@
 						tipIcon: 'iconshibai', // 图标名称
 						mark: false, // 是否有蒙版
 						duration: 2000, // 持续时间
-						mode:'self' // 弹窗模式
+						mode: 'self' // 弹窗模式
 					})
 				} else {
 					this.snapshTimeout = setTimeout(() => {
@@ -210,7 +212,7 @@
 												tipIcon: 'iconchenggong', // 图标名称
 												mark: false, // 是否有蒙版
 												duration: 2000, // 持续时间
-												mode:'self' // 弹窗模式
+												mode: 'self' // 弹窗模式
 											})
 										} else {
 											// 提示对比失败
@@ -242,6 +244,9 @@
 					}
 				);
 			},
+		},
+		destroyed(){
+			clearTimeout(this.loadModal)
 		}
 	}
 </script>

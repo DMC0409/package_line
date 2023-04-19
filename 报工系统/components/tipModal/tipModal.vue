@@ -3,8 +3,8 @@
 		<!-- 遮罩层 -->
 		<view class="mark" v-show="vuex_TipModal.mark"></view>
 		<!-- 主内容 -->
-		<view ref="box" class="flex align-center justify-center animate__animated"
-			:class="{'turnRotate':vuex_TipModal.turnRotate,'tipSelf':vuex_TipModal.mode == 'self','tipCustom':vuex_TipModal.mode == 'custom','animate__bounceIn':vuex_TipModal.isShow,'animate__fadeOut':!vuex_TipModal.isShow}">
+		<view class="flex align-center justify-center"
+			:class="{'turnRotate tipRotate':vuex_TipModal.turnRotate,'tipSelf':vuex_TipModal.mode == 'self','tipCustom':vuex_TipModal.mode == 'custom','hideShowActive':!vuex_TipModal.isShow,'showActive':vuex_TipModal.isShow}">
 			<i v-show="vuex_TipModal.tipIcon!=''" class="iconfont"
 				:class="vuex_TipModal.tipIcon=='iconloading'?'turnRound iconloading':vuex_TipModal.tipIcon"
 				:style="{color:judgeColor(vuex_TipModal.tipIcon)}"></i>
@@ -24,11 +24,22 @@
 	export default {
 		data() {
 			return {
-				closeTimer: null
+				closeTimer: null,
 			}
 		},
 		computed: {
 			...mapState(['vuex_TipModal'])
+		},
+		mounted() {
+			// 初始化一个动画
+			var animation = uni.createAnimation({
+				// 动画时间
+				duration: 1000,
+				// 动画速度
+				timingFunction: 'linear',
+			})
+			// 存在return字段中
+			this.animation = animation
 		},
 		watch: {
 			vuex_TipModal: {
@@ -93,6 +104,22 @@
 			transform: rotate(360deg);
 		}
 	}
+	@keyframes show {
+		0% {
+			opacity: 0;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
+	@keyframes hide {
+		0% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
 
 	.outBorder {
 		position: fixed;
@@ -108,26 +135,33 @@
 			position: absolute;
 			background: rgba(0, 0, 0, .3);
 		}
+		
+		.hideShowActive {
+			animation: hide .5s 1;
+		}
+		.showActive{
+			animation: show .5s 1;
+		}
 
 		.tipSelf,
 		.tipCustom {
 			background: #fff;
 			color: rgba(0, 0, 0, .65);
 			flex-direction: column;
-			border-radius: 20rpx;
+			border-radius: 10rpx;
 			z-index: 10001;
 
 			i {
-				font-size: 4em;
-				margin-bottom: 20rpx;
+				font-size: 5em;
+				margin-bottom: 5vh;
 			}
 
 			button {
 				background-color: #7066e0;
 				border: 3px solid #b2adeb;
 				color: #fff;
-				margin-top: 20rpx;
-				min-width: 80rpx;
+				margin-top: 5vh;
+				min-width: 10vw;
 			}
 
 			.turnRound {
@@ -141,6 +175,7 @@
 
 			.mainText {
 				font-size: 16px;
+				margin-top: 3vh;
 			}
 		}
 
@@ -149,9 +184,14 @@
 			height: 20vw;
 		}
 
+		.tipRotate {
+			width: 25vh !important;
+			height: 25vh !important;
+		}
+
 		.tipCustom {
-			width: 50vw;
-			height: 40vw;
+			width: 40vw;
+			height: 35vw;
 		}
 
 		.turnRotate {

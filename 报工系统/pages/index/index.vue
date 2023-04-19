@@ -1101,16 +1101,23 @@
 							(
 								item
 								.this_value == 0 || item.this_value == '')) {
-							return uni.showModal({
-								title: item.head_name + '未输入',
-								success: (res) => {
-									if (res.confirm) {
-										console.log('用户点击确定')
-									} else if (res.cancel) {
-										console.log('用户点击取消')
-									}
-								}
+							let endStr = '输入'
+							if (item.head_input_set == '20' || item.head_input_set == '21' || item.head_style ==
+								'17') {
+								endStr = '选择'
+							}
+							// 提示未输入信息
+							this.UPDATE_TIPMODAL({
+								isShow: true,
+								tipText: item.head_name + '未' + endStr, // 提示信息
+								tipIcon: 'iconshibai', // 图标名称
+								mark: true, // 是否有蒙版
+								duration: 0, // 持续时间
+								mode: 'custom', // 弹窗模式
+								buttonText: '重新' + endStr, // 按钮文字
+								contentText: '' // 正文
 							})
+							return
 						}
 					}
 					this.checkIngFace = true
