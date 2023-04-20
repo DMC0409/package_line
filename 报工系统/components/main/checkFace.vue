@@ -15,7 +15,6 @@
 				scanWin: null,
 				faceInitTimeout: null,
 				snapshTimeout: null,
-				loadModal: null,
 				faceCheckNum: 0,
 
 				screenWidth: 0,
@@ -31,19 +30,7 @@
 					that.screenHeight = res.screenHeight
 				}
 			});
-			plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
-			// 提示正在打开摄像头
-			this.loadModal = setTimeout(() => {
-				this.UPDATE_TIPMODAL({
-					isShow: true,
-					tipText: '正在打开摄像头', // 提示信息
-					tipIcon: 'iconloading', // 图标名称
-					mark: false, // 是否有蒙版
-					duration: 0, // 持续时间
-					turnRotate: true, //是否旋转
-					mode: 'self' // 弹窗模式
-				})
-			}, 500)
+			// plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
 			this.faceInit()
 		},
 		methods: {
@@ -108,14 +95,16 @@
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
-				this.snapshotPusher()
+				this.snapshTimeout = setTimeout(() => {
+					this.snapshotPusher()
+				}, 3000)
 			},
 			//快照
 			snapshotPusher() {
 				if (this.faceCheckNum > 2) {
 					this.pusher.close() // 关闭直播流
 					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
-					plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
+					// plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
 					// 提示对比超时
 					this.UPDATE_TIPMODAL({
 						isShow: true,
@@ -203,8 +192,8 @@
 											this.pusher.close() // 关闭直播流
 											this.$emit(
 												'stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
-											plus.screen.lockOrientation(
-												'landscape-primary'); //锁定屏幕为横屏
+											// plus.screen.lockOrientation(
+											// 	'landscape-primary'); //锁定屏幕为横屏
 											// 提示人脸识别成功
 											this.UPDATE_TIPMODAL({
 												isShow: true,
@@ -245,9 +234,6 @@
 				);
 			},
 		},
-		destroyed(){
-			clearTimeout(this.loadModal)
-		}
 	}
 </script>
 

@@ -169,12 +169,12 @@
 			}
 
 			.title {
-				font-size: 20px;
+				font-size: 2em;
 				font-weight: bold;
 			}
 
 			.mainText {
-				font-size: 16px;
+				font-size: 1.5em;
 				margin-top: 3vh;
 			}
 		}
