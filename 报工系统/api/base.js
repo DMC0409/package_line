@@ -1,5 +1,5 @@
 let baseURL = ''
-baseURL = 'http://116.62.192.66'
+baseURL = uni.getStorageSync('API')
 module.exports = {
 	baseURL
 }

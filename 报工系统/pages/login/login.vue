@@ -3,6 +3,8 @@
 		style="background-image: url('../../static/image/page-back.png');">
 		<!-- 自定义提示框 -->
 		<tipModal></tipModal>
+		<!-- 自定义键盘 -->
+		<v-keyboard ref="keyboard" :disorderly="false" @typing="typing" @enter="enter"></v-keyboard>
 		<!-- 设置wifi -->
 		<wifiModal v-if="settingWifi" @closeWifi="settingWifi = false"></wifiModal>
 		<!-- 导航栏 -->
@@ -13,8 +15,12 @@
 			<view class="index-info flex align-center justify-center">
 				<view class="form flex align-center" v-for="(item,index) in formList" :key="index">
 					<view class="title">{{item.label}}：</view>
-					<view class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
+					<view v-if="index == 1" class="editMode flex align-center"
+						:class="currentIndex == 1 ?'input-selected':''" @click="openKeyBoard">{{item.value}}
+					</view>
+					<view v-else class="editMode flex align-center" :class="currentIndex == index ?'input-selected':''"
 						@tap="currentIndex = index">{{item.value==''?'请输入':item.value}}</view>
+
 				</view>
 				<view class="operate flex align-center justify-between">
 					<button class="big btn flex align-center justify-center" @click="handleLogin">开始使用</button>
@@ -55,6 +61,8 @@
 <script>
 	// wifi设置弹窗
 	import wifiModal from '../../components/main/wifiModel.vue'
+	// 自定义键盘
+	import vKeyboard from '@/components/VKeyboard/VKeyboard.vue'
 	import {
 		mapState,
 		mapMutations
@@ -68,6 +76,10 @@
 				formList: [{
 						label: '系统编号',
 						value: uni.getStorageSync('mySysId'),
+						focus: false,
+					}, {
+						label: 'API 地址',
+						value: uni.getStorageSync('API') ? uni.getStorageSync('API') : 'https://qly.info',
 						focus: false,
 					},
 					{
@@ -88,7 +100,8 @@
 			}
 		},
 		components: {
-			wifiModal
+			wifiModal,
+			vKeyboard
 		},
 		computed: {
 			...mapState([])
@@ -127,6 +140,7 @@
 				this.selectedNum = -1
 			},
 			handleLogin() {
+				uni.setStorageSync('API', this.formList[1].value)
 				for (let i of this.formList) {
 					if (i.value == '') {
 						// 提示请输入信息
@@ -159,8 +173,8 @@
 							api_class: 'Open_sopEquipmentClass',
 							need_type: 'equipmentLogin',
 							mySysId: this.formList[0].value,
-							sop_equipment_account: this.formList[1].value,
-							sop_equipment_password: this.formList[2].value
+							sop_equipment_account: this.formList[2].value,
+							sop_equipment_password: this.formList[3].value
 						}
 					})
 				}).then((res) => {
@@ -176,14 +190,28 @@
 					// 登陆凭证持久化
 					uni.setStorageSync('loginsession', res.data.data.loginsession_sop)
 					uni.setStorageSync('mySysId', this.formList[0].value)
-					uni.setStorageSync('account', this.formList[1].value)
-					uni.setStorageSync('password', this.formList[2].value)
+					uni.setStorageSync('account', this.formList[2].value)
+					uni.setStorageSync('password', this.formList[3].value)
 					// 跳转至报单页面
 					uni.reLaunch({
 						url: '../index/index'
 					})
 				}).catch(() => {})
-			}
+			},
+			openKeyBoard() {
+				this.currentIndex = 1
+				this.$refs.keyboard.activate();
+			},
+			typing(data) {
+				if (data.backspace) {
+					this.formList[1].value = this.formList[1].value.substr(0, this.formList[1].value.length - 1);
+				} else {
+					this.formList[1].value += data.char
+				}
+			},
+			enter() {
+				this.$refs.keyboard.deactivate();
+			},
 		}
 	}
 </script>
@@ -216,7 +244,7 @@
 				padding-left: 2vh;
 
 				.form {
-					margin: 5vh 0;
+					margin: 4vh 0;
 
 					.editMode {
 						width: 22vw;
