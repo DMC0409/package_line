@@ -535,8 +535,10 @@
 			},
 			// 选择报工步骤
 			onShowDetail(item, index, type) {
-				//是报工还是修改记录
-				this.setLineDataType = type;
+				//是报工还是修改记录，若未传入type，则直接使用this.setLineDataType进行判断，此时为若用户已选择了报工步骤，已确定为新增还是修改
+				if (type) {
+					this.setLineDataType = type;
+				}
 				this.tableInfoLink = item;
 				// 设置报工步骤选中的下标
 				this.stepsIndex = index
@@ -789,6 +791,7 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
+				console.log('setLineDataType--------', this.setLineDataType)
 				// 清空员工卡号
 				this.onDelInput()
 				this.orderIndex = index
@@ -954,6 +957,12 @@
 			},
 			// 提交报工信息
 			onSureEdit(faceData) {
+				// 为了获取完成卡号，延迟500ms
+				let delayTime = 500
+				if(faceData.checkFace){
+					// 若人脸识别成功提交报工单则延迟1s，为了让提示框显示完成
+					delayTime = 1000
+				}
 				this.load = setTimeout(() => {
 					// 让员工卡号输入框失焦
 					this.inputIndex = -2
@@ -1068,7 +1077,7 @@
 					}).catch(err => {
 						console.log(err)
 					})
-				}, 500)
+				}, delayTime)
 			},
 			// 进行人脸识别
 			toCheckFace() {

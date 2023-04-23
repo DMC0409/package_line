@@ -152,7 +152,7 @@
 			z-index: 10001;
 
 			i {
-				font-size: 5em;
+				font-size: 6em;
 				margin-bottom: 5vh;
 			}
 
@@ -169,12 +169,12 @@
 			}
 
 			.title {
-				font-size: 2em;
+				font-size: 3em;
 				font-weight: bold;
 			}
 
 			.mainText {
-				font-size: 1.5em;
+				font-size: 2em;
 				margin-top: 3vh;
 			}
 		}

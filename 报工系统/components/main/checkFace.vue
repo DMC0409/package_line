@@ -1,5 +1,7 @@
 <template>
-	<view class="outBorder"></view>
+	<view class="outBorder">
+		<web-view :webview-styles="webviewStyles" src="/hybrid/html/face.html" @message="toShot"></web-view>
+	</view>
 </template>
 
 <script>
@@ -8,6 +10,7 @@
 	} from 'vuex'
 	// 直播流查看权限
 	import permission from '../../utils/permission.js'
+	var wv; //计划创建的webview
 	export default {
 		data() {
 			return {
@@ -15,21 +18,23 @@
 				scanWin: null,
 				faceInitTimeout: null,
 				snapshTimeout: null,
-				faceCheckNum: 0,
-
-				screenWidth: 0,
-				screenHeight: 0
+				webviewStyles: {
+					progress: false
+				}
 			}
 		},
 		props: ['dataDetailAllList'],
 		mounted() {
-			let that = this
-			uni.getSystemInfo({
-				success: function(res) {
-					that.screenWidth = res.screenWidth
-					that.screenHeight = res.screenHeight
-				}
-			});
+			// #ifdef APP-PLUS
+			var currentWebview = this.$parent.$scope
+				.$getAppWebview() //此对象相当于html5plus里的plus.webview.currentWebview()。在uni-app里vue页面直接使用plus.webview.currentWebview()无效
+			this.snapshTimeout = setTimeout(function() {
+				wv = currentWebview.children()[0]
+				wv.setStyle({
+					background: 'transparent'
+				})
+			}, 50); //如果是页面初始化调用时，需要延时一下
+			// #endif
 			// plus.screen.lockOrientation('portrait-primary'); //锁定屏幕为竖屏
 			this.faceInit()
 		},
@@ -59,7 +64,6 @@
 			// },
 			//初始化
 			faceInit() {
-				this.faceCheckNum = 0
 				this.faceInitTimeout = setTimeout(async () => {
 					//创建livepusher
 					if (uni.getSystemInfoSync().platform === 'android') {
@@ -95,49 +99,30 @@
 				this.pusher.switchCamera();
 				//开始预览
 				this.pusher.preview();
-				this.snapshTimeout = setTimeout(() => {
-					this.snapshotPusher()
-				}, 3000)
+			},
+			toShot(e) {
+				console.log('shot-------', e.detail.data)
+				// 提示识别中
+				uni.showLoading({
+					title: ''
+				});
+				this.snapshotPusher()
 			},
 			//快照
 			snapshotPusher() {
-				if (this.faceCheckNum > 2) {
-					this.pusher.close() // 关闭直播流
-					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
-					// plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
-					// 提示对比超时
-					this.UPDATE_TIPMODAL({
-						isShow: true,
-						tipText: '对比超时', // 提示信息
-						tipIcon: 'iconshibai', // 图标名称
-						mark: false, // 是否有蒙版
-						duration: 2000, // 持续时间
-						mode: 'self' // 弹窗模式
-					})
-				} else {
-					this.snapshTimeout = setTimeout(() => {
-						this.faceCheckNum++
-						// 提示识别中
-						// this.tipOper('1')
-						uni.showLoading({
-							title: ''
-						});
-						this.pusher.snapshot(
-							e => {
-								//拿到本地文件路径
-								var src = e.tempImagePath;
-								// console.log(src)
-								//获取图片base64
-								this.getMinImage(src);
-							},
-							function(e) {
-								plus.nativeUI.alert('snapshot error: ' + JSON.stringify(e));
-							}
-						);
-					}, 2000)
-				}
+				this.pusher.snapshot(
+					e => {
+						//拿到本地文件路径
+						var src = e.tempImagePath;
+						// console.log(src)
+						//获取图片base64
+						this.getMinImage(src);
+					},
+					function(e) {
+						plus.nativeUI.alert('snapshot error: ' + JSON.stringify(e));
+					}
+				);
 			},
-
 			//使用plus.zip.compressImage压缩图片
 			getMinImage(imgPath) {
 				let that = this
@@ -167,31 +152,22 @@
 								success: (res) => {
 									console.log(res)
 									uni.hideLoading()
+									this.pusher.close() // 关闭直播流
+									this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
+									// // plus.screen.lockOrientation('landscape-primary'); //锁定屏幕为横屏
 									if (res.data.error_msg == "pic not has face") {
 										// 提示未捕获到人脸
-										// this.UPDATE_TIPMODAL({
-										// 	isShow: true,
-										// 	tipText: '未捕获到人脸', // 提示信息
-										// 	tipIcon: 'iconshibai', // 图标名称
-										// 	mark: false, // 是否有蒙版
-										// 	duration: 2000, // 持续时间
-										// mode:'self' // 弹窗模式
-										// })
-										// this.tipOper('2')
-										this.snapshotPusher()
-									}
-									if (res.data.error_msg == 'SUCCESS') {
+										this.UPDATE_TIPMODAL({
+											isShow: true,
+											tipText: '未捕获到人脸', // 提示信息
+											tipIcon: 'iconshibai', // 图标名称
+											mark: false, // 是否有蒙版
+											duration: 2000, // 持续时间
+											mode: 'self' // 弹窗模式
+										})
+									} else if (res.data.error_msg == 'SUCCESS') {
 										if (res.data.result.user_list[0] && res.data.result.user_list[
 												0].score > 80) {
-											this.$emit(
-												'checkSuccess', {
-													checkFace: true,
-													faceInfo: res.data.result.user_list[0]
-												}
-											) // 调用父组件方法提交报工信息
-											this.pusher.close() // 关闭直播流
-											this.$emit(
-												'stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
 											// plus.screen.lockOrientation(
 											// 	'landscape-primary'); //锁定屏幕为横屏
 											// 提示人脸识别成功
@@ -203,24 +179,29 @@
 												duration: 2000, // 持续时间
 												mode: 'self' // 弹窗模式
 											})
+											// 调用父组件方法提交报工信息
+											this.$emit(
+												'checkSuccess', {
+													checkFace: true,
+													faceInfo: res.data.result
+														.user_list[0]
+												}
+											)
 										} else {
 											// 提示对比失败
-											// this.UPDATE_TIPMODAL({
-											// 	isShow: true,
-											// 	tipText: '对比失败', // 提示信息
-											// 	tipIcon: 'iconshibai', // 图标名称
-											// 	mark: false, // 是否有蒙版
-											// 	duration: 2000, // 持续时间
-											// mode:'self' // 弹窗模式
-											// })
-											// this.tipOper('3')
-											this.snapshotPusher()
+											this.UPDATE_TIPMODAL({
+												isShow: true,
+												tipText: '对比失败', // 提示信息
+												tipIcon: 'iconshibai', // 图标名称
+												mark: false, // 是否有蒙版
+												duration: 2000, // 持续时间
+												mode: 'self' // 弹窗模式
+											})
 										}
 									}
 								},
 								fail: (err) => {
 									uni.hideLoading()
-									this.snapshotPusher()
 									console.log(err)
 								}
 							})
@@ -234,6 +215,10 @@
 				);
 			},
 		},
+		destroyed() {
+			clearTimeout(this.faceInitTimeout)
+			clearTimeout(this.snapshTimeout)
+		}
 	}
 </script>
 

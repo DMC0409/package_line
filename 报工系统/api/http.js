@@ -104,10 +104,10 @@ export const myRequest = (options) => {
 					store._mutations['UPDATE_CONSOLE'][0](nowConsole)
 					// 清除计时器
 					clearTimeout(TIME)
-					// 提示未打开wifi
+					// 提示接口访问失败
 					store._mutations['UPDATE_TIPMODAL'][0]({
 						isShow: true,
-						tipText: '未打开wifi', // 提示信息
+						tipText: '服务器出错', // 提示信息
 						tipIcon: 'iconshibai', // 图标名称
 						mark: true, // 是否有蒙版
 						duration: 2000, // 持续时间
