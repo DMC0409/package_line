@@ -408,6 +408,7 @@
 
 				stepsIndex: -1, //报工步骤选中下标
 				stepsList: [], // 报工步骤列表
+				macList: [], // 设备列表
 
 				showSGD: false,
 				shiGongDImg: '', //施工单图片
@@ -529,6 +530,19 @@
 					}
 				}).then(res => {
 					this.stepsList = res.data.data.tableList
+					// 获取所有设备列表
+					return this.$api({
+						url: '/api/data.php',
+						method: 'post',
+						data: {
+							api_class: 'Open_sopEquipmentClass',
+							need_type: 'getEquipmentList',
+							mySysId: uni.getStorageSync('mySysId'),
+							loginsession_sop: uni.getStorageSync('loginsession')
+						}
+					})
+				}).then(res => {
+					this.macList = res.data.data.equipmentList.list.dataList
 				}).catch(err => {
 					console.log(err)
 				})
@@ -791,7 +805,6 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
-				console.log('setLineDataType--------', this.setLineDataType)
 				// 清空员工卡号
 				this.onDelInput()
 				this.orderIndex = index
@@ -872,24 +885,15 @@
 				this.$set(this.dataDetailList[this.inputIndex], 'this_str', item.label)
 				this.pickerArr = []
 			},
-			// 获取设备列表
+			// 与设备列表macList进行匹配获取当前步骤的设备数据
 			getEquimp(index) {
 				this.inputIndex = index || 0
-				this.$api({
-					url: '/api/data.php',
-					method: 'post',
-					data: {
-						api_class: 'Open_sopEquipmentClass',
-						need_type: 'getEquipmentList',
-						mySysId: uni.getStorageSync('mySysId'),
-						loginsession_sop: uni.getStorageSync('loginsession'),
-						ass_equipment_type_id: this.dataDetailList[index].comm_set_json.select_accurate_type_id
+				this.equimpArr = []
+				for (let i of this.macList) {
+					if (i.ass_equipment_type_id == this.dataDetailList[index].comm_set_json.select_accurate_type_id) {
+						this.equimpArr.push(i)
 					}
-				}).then(res => {
-					this.equimpArr = res.data.data.equipmentList.list.dataList
-				}).catch(err => {
-					console.log(err)
-				})
+				}
 			},
 			// 修改选中设备值
 			bindPickerEquip(item) {
@@ -959,7 +963,7 @@
 			onSureEdit(faceData) {
 				// 为了获取完成卡号，延迟500ms
 				let delayTime = 500
-				if(faceData.checkFace){
+				if (faceData.checkFace) {
 					// 若人脸识别成功提交报工单则延迟1s，为了让提示框显示完成
 					delayTime = 1000
 				}
