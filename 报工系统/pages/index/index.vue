@@ -40,7 +40,7 @@
 					<text>{{shigongDH2==''?'施工单号':shigongDH2}}</text>
 					<image @click="toScan" src="../../static/image/scan.png" alt=""></image>
 				</view> -->
-				<input type="number" :focus="getFocus" @blur="toFocus" v-model="shigongDH2"
+				<input type="number" :focus="getFocus" @blur="toFocus" v-model.number="shigongDH2"
 					placeholder-class="place-class" @confirm="onSetOrder" placeholder="施工单号">
 				<view class="detail">
 					<view class="jsq flex justify-end">
@@ -471,6 +471,20 @@
 			})
 			// #endif
 		},
+		onShow() {
+			// #ifdef APP-PLUS
+			// 监听键盘事件
+			let that = this
+			plus.key.addEventListener('keydown', function(e) {
+				console.log(`keyCode:${e.keyCode}`)
+				switch (e.keyCode) {
+					case 158:
+						that.onSetReCode()
+						break;
+				}
+			});
+			// #endif
+		},
 		onHide() {
 			this.faceInitTimeout && clearTimeout(this.faceInitTimeout);
 			this.snapshTimeout && clearTimeout(this.snapshTimeout);
@@ -481,6 +495,8 @@
 		watch: {
 			// 每次报工表单修改目标更改就进行工资计算
 			inputIndex() {
+				// 清空设备列表，隐藏设备下拉框
+				this.equimpArr = []
 				let tempLineInfo = {};
 				for (let item of this.dataDetailList) {
 					tempLineInfo['th_' + item.config_table_head_id] = item.this_value
@@ -805,6 +821,8 @@
 			},
 			// 选中右侧弹窗订单
 			onEditOrder(item, index) {
+				// 清空设备列表数据
+				this.equimpArr = []
 				// 清空员工卡号
 				this.onDelInput()
 				this.orderIndex = index
@@ -918,7 +936,12 @@
 			},
 			//键盘
 			onClickNum(num) {
+				// 若当前编辑对象为设备列表，则迷你数字键盘输入无效
+				if (this.dataDetailList[this.inputIndex].head_style == '17') {
+					return
+				}
 				let headValue
+				// inputIndex == -1表示正在输入员工卡号
 				if (this.inputIndex == -1) {
 					headValue = this.emploId
 				} else {
