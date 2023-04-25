@@ -1,6 +1,6 @@
 <template>
 	<view class="outBorder">
-		<web-view :webview-styles="webviewStyles" src="/hybrid/html/face.html" @message="toShot"></web-view>
+		<web-view :webview-styles="webviewStyles" src="/hybrid/html/face.html" @message="emitFun"></web-view>
 	</view>
 </template>
 
@@ -100,13 +100,18 @@
 				//开始预览
 				this.pusher.preview();
 			},
-			toShot(e) {
+			emitFun(e) {
 				console.log('shot-------', e.detail.data)
-				// 提示识别中
-				uni.showLoading({
-					title: ''
-				});
-				this.snapshotPusher()
+				if (e.detail.data[0].action == 'shot') {
+					// 提示识别中
+					uni.showLoading({
+						title: ''
+					});
+					this.snapshotPusher()
+				} else if (e.detail.data[0].action == 'cancel') {
+					this.pusher.close() // 关闭直播流
+					this.$emit('stopCheckFace') // 调用父组件方法关闭人脸识别弹窗
+				}
 			},
 			//快照
 			snapshotPusher() {

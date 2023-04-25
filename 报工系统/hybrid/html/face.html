@@ -18,27 +18,39 @@
 				top: 40%;
 				transform: translate(-50%, -60%);
 			}
-			.content #shotButton {
-				width: 15%;
+			.content .operOut {
+				width: 90%;
 				height: 10%;
-				background: green;
 				color: #fff;
-				border-radius: 10px;
 				position: fixed;
 				left: 50%;
 				top: 90%;
 				transform: translate(-50%, -10%);
+				font-size: 2em;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.content .operOut #cancelCheck,.content .operOut #shotButton {
+				width: 15%;
+				background: #666;
+				border-radius: 10px;
 				display: flex;
 				justify-content: center;
 				align-items: center;
-				font-size: 2em;
+			}
+			.content .operOut #shotButton{
+				background: green;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="content">
 			<img src="./img/checkFace.png" alt="">
-			<div id="shotButton">人脸识别</div>
+			<div class="operOut">
+				<div id="cancelCheck">取消</div>
+				<div id="shotButton">人脸识别</div>
+			</div>
 		</div>
 		<!-- 需要把 uni.webview.1.5.4.js 下载到自己的服务器 -->
 		<script type="text/javascript" src="./js/uni-webview-js@0.0.3.js"></script>
@@ -47,7 +59,15 @@
 			document.getElementById('shotButton').addEventListener('click', function() {
 				uni.postMessage({
 					data: {
-						action: 'message'
+						action: 'shot'
+					}
+				});
+			})
+			// 触发应用页面中取消人脸识别事件
+			document.getElementById('cancelCheck').addEventListener('click', function() {
+				uni.postMessage({
+					data: {
+						action: 'cancel'
 					}
 				});
 			})

@@ -2,11 +2,15 @@
     "name" : "报工系统",
     "appid" : "__UNI__BDD72FC",
     "description" : "",
-    "versionName" : "3.1.3",
-    "versionCode" : 313,
+    "versionName" : "3.1.6",
+    "versionCode" : 316,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
+        /*禁止弹出Html5+ Runtime 的弹框*/
+        "compatible" : {
+            "ignoreVersion" : true
+        },
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,

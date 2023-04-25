@@ -472,18 +472,18 @@
 			// #endif
 		},
 		onShow() {
-			// #ifdef APP-PLUS
-			// 监听键盘事件
-			let that = this
-			plus.key.addEventListener('keydown', function(e) {
-				console.log(`keyCode:${e.keyCode}`)
-				switch (e.keyCode) {
-					case 158:
-						that.onSetReCode()
-						break;
-				}
-			});
-			// #endif
+			// // #ifdef APP-PLUS
+			// // 监听键盘事件
+			// let that = this
+			// plus.key.addEventListener('keydown', function(e) {
+			// 	console.log(`keyCode:${e.keyCode}`)
+			// 	switch (e.keyCode) {
+			// 		case 158:
+			// 			that.onSetReCode()
+			// 			break;
+			// 	}
+			// });
+			// // #endif
 		},
 		onHide() {
 			this.faceInitTimeout && clearTimeout(this.faceInitTimeout);
@@ -1683,12 +1683,16 @@
 
 									input {
 										font-size: 2vw;
+										height: 10vh;
+										line-height: 10vh;
 									}
 
 									.type-item {
 										width: 100%;
 										margin: 10rpx;
-										padding: 10rpx 12rpx;
+										height: 10vh;
+										line-height: 10vh;
+										padding: 0 12rpx;
 										background: #061830;
 										border-radius: 5rpx;
 										font-size: 2vw;
