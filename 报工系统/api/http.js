@@ -1,6 +1,3 @@
-import {
-	baseURL
-} from './base.js'
 import store from '../store/index.js'
 
 export const myRequest = (options) => {
@@ -22,6 +19,7 @@ export const myRequest = (options) => {
 			})
 		}
 		TIME = setTimeout(() => {
+			let baseURL = uni.getStorageSync('API') ? uni.getStorageSync('API') : 'https://qly.info'
 			uni.request({
 				url: baseURL + options.url, //接口地址：前缀+方法中传入的地址
 				method: options.method || 'GET', //请求方法：传入的方法或者默认是“GET”

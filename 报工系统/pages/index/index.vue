@@ -109,10 +109,11 @@
 											<view class="type-item" @click="getPickerArr(index)">
 												{{item.this_str}}
 											</view>
-											<image v-if="pickerArr.length!=0" class="triangle"
+											<image v-if="pickerArr.length!=0 && index == formIndex" class="triangle"
 												src="../../static/image/triangle-up.png">
 											</image>
-											<view class="equipmOut flex" v-if="pickerArr.length!=0">
+											<view class="equipmOut flex"
+												v-if="pickerArr.length!=0 && index == formIndex">
 												<view class="eachEquip" @click.stop="bindPickerArr(i)"
 													v-for="(i,num) in pickerArr" :key="num">
 													{{i.label}}
@@ -439,6 +440,7 @@
 				showOrderDetail: false,
 				emploId: '', // 报工员工卡号
 				Value: [],
+				formIndex: -1,
 				equimpArr: [], // 报工设备选择列表
 				pickerArr: [], // 报工表单可选择的数据
 				timer: null, //右上角时间循环器
@@ -875,6 +877,7 @@
 						'isedit'] != undefined) {
 					return;
 				}
+				this.formIndex = index
 				if (this.dataDetailList[index]['head_style'] != 0) {
 					//除了设备可以选择操作，其他暂时不可以
 				} else {
