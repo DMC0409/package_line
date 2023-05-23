@@ -2,8 +2,8 @@
     "name" : "报工系统",
     "appid" : "__UNI__BDD72FC",
     "description" : "",
-    "versionName" : "3.1.7",
-    "versionCode" : 317,
+    "versionName" : "3.1.8",
+    "versionCode" : 318,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
