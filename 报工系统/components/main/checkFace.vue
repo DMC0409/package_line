@@ -92,6 +92,7 @@
 					height: '100%',
 					aspect: '9:16',
 					muted: true,
+					orientation: 'horizontal',
 				});
 				// 将推流对象加到当前页面中
 				currentWebview.append(this.pusher);
