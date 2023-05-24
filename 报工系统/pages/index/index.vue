@@ -1227,7 +1227,7 @@
 							console.log(appData)
 							// 版本不同则进行更新
 							let url = res.data.data.downloadLink
-							if (res.data.data.versionNum != appData.version) {
+							if (res.data.data.versionNum > appData.version) {
 								// 下载更新文件
 								uni.downloadFile({
 									url,
